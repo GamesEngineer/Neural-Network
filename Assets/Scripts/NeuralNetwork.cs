@@ -9,8 +9,8 @@ public class NeuralNetwork : MonoBehaviour
     {
         public readonly float[] inputs; // "owned" by previous layer
         public readonly float[] outputs; // neuron outputs
-        public readonly float[,] weights; // [inputs, outputs]
-        public readonly float[] biases;
+        public readonly float[,] weights; // matrix [outputs, inputs] of synaptic weights (one row of weights for each output neuron)
+        public readonly float[] biases; // offset added to weighted sum of inputs
         public readonly float[] feedback; // learning via back propagation
         public Neuron.ActivationType activationType = Neuron.ActivationType.ReLU;
 
@@ -19,7 +19,7 @@ public class NeuralNetwork : MonoBehaviour
             int numInputs = inputs.Length;
             this.inputs = inputs;
             outputs = new float[numOutputs];
-            weights = new float[numInputs, numOutputs];
+            weights = new float[numOutputs, numInputs];
             biases = new float[numOutputs];
             feedback = new float[numOutputs];
 
@@ -30,11 +30,11 @@ public class NeuralNetwork : MonoBehaviour
             }
 
             // Initialize the matrix of synaptic weights with random noise
-            for (int inIndex = 0; inIndex < numInputs; inIndex++)
+            for (int outIndex = 0; outIndex < numOutputs; outIndex++)
             {
-                for (int outIndex = 0; outIndex < numOutputs; outIndex++)
+                for (int inIndex = 0; inIndex < numInputs; inIndex++)
                 {
-                    weights[inIndex, outIndex] = UnityEngine.Random.Range(-0.5f, 0.5f);
+                    weights[outIndex, inIndex] = UnityEngine.Random.Range(-0.5f, 0.5f);
                 }
             }
         }
@@ -43,8 +43,8 @@ public class NeuralNetwork : MonoBehaviour
         {
             int numInputs = inputs.Length;
             int numOutputs = outputs.Length;
-            Assert.IsTrue(weights.GetLength(0) == numInputs);
-            Assert.IsTrue(weights.GetLength(1) == numOutputs);
+            Assert.IsTrue(weights.GetLength(0) == numOutputs);
+            Assert.IsTrue(weights.GetLength(1) == numInputs);
             var activationFunc = Neuron.ActivationFunctions[(int)activationType];
 
             for (int outIndex = 0; outIndex < numOutputs; outIndex++)
@@ -52,41 +52,49 @@ public class NeuralNetwork : MonoBehaviour
                 float weightedSum = 0f;
                 for (int inIndex = 0; inIndex < numInputs; inIndex++)
                 {
-                    weightedSum += inputs[inIndex] * weights[inIndex, outIndex];
+                    weightedSum += inputs[inIndex] * weights[outIndex, inIndex];
                 }
                 outputs[outIndex] = activationFunc(weightedSum + biases[outIndex]);
             }
         }
 
-        public void BackPropagate(float[] errors, float learningRate)
+        public void BackPropagate(float[] errors, float[,] nextLayerWeights, float learningRate)
         {
-            int numOutputs = outputs.Length;
-            Assert.IsTrue(feedback.Length == numOutputs);
             int numInputs = inputs.Length;
-            Assert.IsTrue(weights.GetLength(0) == numInputs);
-            Assert.IsTrue(weights.GetLength(1) == numOutputs);
+            int numOutputs = outputs.Length;
+            int numErrors = errors.Length;
+            Assert.IsTrue(nextLayerWeights == null || nextLayerWeights.GetLength(0) == numErrors);
+            Assert.IsTrue(nextLayerWeights == null || nextLayerWeights.GetLength(1) == numOutputs);
+            Assert.IsTrue(weights.GetLength(0) == numOutputs);
+            Assert.IsTrue(weights.GetLength(1) == numInputs);
             Assert.IsTrue(biases.Length == numOutputs);
+            Assert.IsTrue(feedback.Length == numOutputs);
             var dActivationFunc = Neuron.ActivationDerivatives[(int)activationType];
 
             // Calculate feedback signals
             for (int outIter = 0; outIter < numOutputs; outIter++)
             {
+                float slope = dActivationFunc(outputs[outIter]);
                 float weightedError = 0f;
-                for (int inIter = 0; inIter < numInputs; inIter++)
+                for (int nextIter = 0; nextIter < numErrors; nextIter++)
                 {
-                    weightedError += errors[outIter] * weights[inIter, outIter];
+                    weightedError += errors[nextIter] * slope;
+                    if (nextLayerWeights != null) // TODO - move conditional out of loops
+                    {
+                        weightedError *= nextLayerWeights[nextIter, outIter];
+                    }
                 }
-                feedback[outIter] = dActivationFunc(outputs[outIter]) * weightedError;
+                feedback[outIter] = weightedError;
             }
 
             // Update weights and biases
             for (int outIter = 0; outIter < numOutputs; outIter++)
             {
-                float change = feedback[outIter] * learningRate; // TODO - should this be negated?
+                float change = learningRate * feedback[outIter];
                 biases[outIter] += change;
                 for (int inIter = 0; inIter < numInputs; inIter++)
                 {
-                    weights[inIter, outIter] += inputs[inIter] * change;
+                    weights[outIter, inIter] += change * inputs[inIter];
                 }
             }
         }
@@ -107,32 +115,11 @@ public class NeuralNetwork : MonoBehaviour
     public float[] Results { get; private set; }
     public float[] Targets { get; private set; }
     [Range(0.001f, 0.5f)] public float learningRate = 0.01f;
-    public bool train;
     public int numTrainingIterations = 1000;
 
-    void Start()
+    public void Initialize(int numInputs)
     {
-        Initialize();
-    }
-
-    void Update()
-    {
-        if (train)
-        {
-            for (int iter = 1; iter <= numTrainingIterations; iter++)
-            {
-                Train(Targets, learningRate);
-            }
-        }
-        else
-        {
-            Think();
-        }
-    }
-
-    private void Initialize()
-    {
-        SensoryInputs = new float[layersInfo[0].neuronCount];
+        SensoryInputs = new float[numInputs];
 
         // Create the layers and connect them to each other
         layers = new List<Layer>(layersInfo.Count);
@@ -164,7 +151,7 @@ public class NeuralNetwork : MonoBehaviour
         return loss;
     }
 
-    private void Think()
+    public void Think()
     {
         foreach (var l in layers)
         {
@@ -172,7 +159,7 @@ public class NeuralNetwork : MonoBehaviour
         }
     }
 
-    private void Train(float[] targets, float learningRate)
+    public void Train(float[] targets, float learningRate)
     {
         Think();
 
@@ -186,7 +173,7 @@ public class NeuralNetwork : MonoBehaviour
         // future predictions.
         for (int i = layers.Count - 1; i >= 0; i--)
         {
-            layers[i].BackPropagate(errors, learningRate);
+            layers[i].BackPropagate(errors, null, learningRate);
             errors = layers[i].feedback;
         }
     }
