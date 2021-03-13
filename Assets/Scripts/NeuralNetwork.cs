@@ -72,19 +72,27 @@ public class NeuralNetwork : MonoBehaviour
             var dActivationFunc = Neuron.ActivationDerivatives[(int)activationType];
 
             // Calculate feedback signals
-            for (int outIter = 0; outIter < numOutputs; outIter++)
+            if (nextLayerWeights == null)
             {
-                float slope = dActivationFunc(outputs[outIter]);
-                float weightedError = 0f;
-                for (int nextIter = 0; nextIter < numErrors; nextIter++)
+                Assert.IsTrue(numErrors == numOutputs);
+                for (int outIter = 0; outIter < numOutputs; outIter++)
                 {
-                    weightedError += errors[nextIter] * slope;
-                    if (nextLayerWeights != null) // TODO - move conditional out of loops
-                    {
-                        weightedError *= nextLayerWeights[nextIter, outIter];
-                    }
+                    float slope = dActivationFunc(outputs[outIter]);
+                    feedback[outIter] = slope * errors[outIter];
                 }
-                feedback[outIter] = weightedError;
+            }
+            else
+            {
+                for (int outIter = 0; outIter < numOutputs; outIter++)
+                {
+                    float slope = dActivationFunc(outputs[outIter]);
+                    float weightedError = 0f;
+                    for (int nextIter = 0; nextIter < numErrors; nextIter++)
+                    {
+                        weightedError += errors[nextIter] * nextLayerWeights[nextIter, outIter];
+                    }
+                    feedback[outIter] = slope * weightedError;
+                }
             }
 
             // Update weights and biases
@@ -166,6 +174,7 @@ public class NeuralNetwork : MonoBehaviour
         float cost = CalculateLoss(targets, OutputLayer.outputs, OutputLayer.feedback);
         Debug.Log($"Cost: {cost}");
         float[] errors = OutputLayer.feedback;
+        float[,] nextLayerWeights = null;
 
         // Propagate errors backward through the network,
         // and update each layer's weights and biases with
@@ -173,8 +182,9 @@ public class NeuralNetwork : MonoBehaviour
         // future predictions.
         for (int i = layers.Count - 1; i >= 0; i--)
         {
-            layers[i].BackPropagate(errors, null, learningRate);
+            layers[i].BackPropagate(errors, nextLayerWeights, learningRate);
             errors = layers[i].feedback;
+            nextLayerWeights = layers[i].weights;
         }
     }
 }

@@ -396,9 +396,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   layersInfo:
   - neuronCount: 2
-    activationType: 2
+    activationType: 0
   - neuronCount: 1
-    activationType: 2
+    activationType: 0
   learningRate: 0.01
   numTrainingIterations: 1000
 --- !u!4 &845530011

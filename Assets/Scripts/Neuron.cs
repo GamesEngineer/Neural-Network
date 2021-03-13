@@ -16,13 +16,9 @@ public static class Neuron
     // Range: [-1..+1]
     private static float Tanh(float x)
     {
-        return 0f; //TODO
+        float e2x = Mathf.Exp(2f * x);
+        return (e2x - 1f) / (e2x + 1f);
     }
-
-    //{
-    //    float e2x = Mathf.Exp(2f * x);
-    //    return (e2x - 1f) / (e2x + 1f);
-    //}
 
     private static float dTanh(float x)
     {

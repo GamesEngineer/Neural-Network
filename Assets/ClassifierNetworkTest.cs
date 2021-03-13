@@ -41,21 +41,7 @@ public class ClassifierNetworkTest : MonoBehaviour
         {
             LearnPoint(i);
         }
-    }
 
-    private void LearnPoint(int i)
-    {
-        var p = points[i];
-        targets[0] = -p.x > p.y ? 1f : -1f;
-        brain.SensoryInputs[0] = p.x;
-        brain.SensoryInputs[1] = p.y;
-        brain.Train(targets, brain.learningRate);
-        brain.Think();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
         for (int h = 0; h < texture.height; h++)
         {
             for (int w = 0; w < texture.width; w++)
@@ -77,5 +63,15 @@ public class ClassifierNetworkTest : MonoBehaviour
         }
 
         texture.Apply();
+    }
+
+    private void LearnPoint(int i)
+    {
+        var p = points[i];
+        targets[0] = -p.x > p.y ? 1f : -1f;
+        brain.SensoryInputs[0] = p.x;
+        brain.SensoryInputs[1] = p.y;
+        brain.Train(targets, brain.learningRate);
+        brain.Think();
     }
 }
