@@ -58,7 +58,7 @@ public class NeuralNetwork : MonoBehaviour
             }
         }
 
-        public void BackPropagate(float[] errors, float[,] nextLayerWeights, float learningRate)
+        public void BackPropagate(float[] errors, float[,] nextLayerWeights)
         {
             int numInputs = inputs.Length;
             int numOutputs = outputs.Length;
@@ -94,8 +94,17 @@ public class NeuralNetwork : MonoBehaviour
                     feedback[outIter] = slope * weightedError;
                 }
             }
+        }
 
-            // Update weights and biases
+        public void UpdateWeightsAndBiases(float learningRate)
+        {
+            int numInputs = inputs.Length;
+            int numOutputs = outputs.Length;
+            Assert.IsTrue(weights.GetLength(0) == numOutputs);
+            Assert.IsTrue(weights.GetLength(1) == numInputs);
+            Assert.IsTrue(biases.Length == numOutputs);
+            Assert.IsTrue(feedback.Length == numOutputs);
+
             for (int outIter = 0; outIter < numOutputs; outIter++)
             {
                 float change = learningRate * feedback[outIter];
@@ -120,8 +129,9 @@ public class NeuralNetwork : MonoBehaviour
     public Layer InputLayer => layers[0];
     public Layer OutputLayer => layers[layers.Count - 1];
     public float[] SensoryInputs { get; private set; }
-    public float[] Results { get; private set; }
     public float[] Targets { get; private set; }
+    public float[] Results { get; private set; }
+    public float Loss { get; private set; }
     [Range(0.001f, 0.5f)] public float learningRate = 0.01f;
     public int numTrainingIterations = 1000;
 
@@ -167,24 +177,26 @@ public class NeuralNetwork : MonoBehaviour
         }
     }
 
-    public void Train(float[] targets, float learningRate)
+    public void Learn(float[] targets, float learningRate)
     {
+        // Populate the network with feed-forward data
         Think();
 
-        float cost = CalculateLoss(targets, OutputLayer.outputs, OutputLayer.feedback);
-        Debug.Log($"Cost: {cost}");
-        float[] errors = OutputLayer.feedback;
-        float[,] nextLayerWeights = null;
+        float[] errors = new float[OutputLayer.feedback.Length];
+        Loss = CalculateLoss(targets, OutputLayer.outputs, errors);
 
         // Propagate errors backward through the network,
         // and update each layer's weights and biases with
         // gradient descent in order to reduce error in
         // future predictions.
+        float[,] nextLayerWeights = null;
         for (int i = layers.Count - 1; i >= 0; i--)
         {
-            layers[i].BackPropagate(errors, nextLayerWeights, learningRate);
-            errors = layers[i].feedback;
-            nextLayerWeights = layers[i].weights;
+            var layer = layers[i];
+            layer.BackPropagate(errors, nextLayerWeights);
+            layer.UpdateWeightsAndBiases(learningRate);
+            errors = layer.feedback;
+            nextLayerWeights = layer.weights;
         }
     }
 }

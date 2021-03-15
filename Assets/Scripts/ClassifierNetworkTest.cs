@@ -36,12 +36,28 @@ public class ClassifierNetworkTest : MonoBehaviour
         UnityEngine.Random.InitState(seed);
         Debug.Log($"Seed: {seed}");
 
+        Vector2[] shuffledPoints = points.ToArray();
         brain.Initialize(2);
-        for (int i = 0; i < points.Count; i++)
+        int iter;
+        for (iter = 0; iter < brain.numTrainingIterations; iter++)
         {
-            LearnPoint(i);
+            Shuffle(shuffledPoints);
+            for (int i = 0; i < points.Count; i++)
+            {
+                LearnPoint(shuffledPoints[i]);
+            }
+            if (iter < 100 || iter % 100 == 0)
+            {
+                Debug.Log($"Loss is {brain.Loss} after {iter} iterations");
+            }
+            if (brain.Loss < 1e-20f)
+            {
+                break; // good enough
+            }
         }
+        Debug.Log($"Final loss is {brain.Loss} after {iter} iterations");
 
+        // Draw map of learned predictions
         for (int h = 0; h < texture.height; h++)
         {
             for (int w = 0; w < texture.width; w++)
@@ -49,29 +65,45 @@ public class ClassifierNetworkTest : MonoBehaviour
                 brain.SensoryInputs[0] = ((float)w / (float)texture.width) * 4f - 2f;
                 brain.SensoryInputs[1] = ((float)h / (float)texture.height) * 4f - 2f;
                 brain.Think();
-                texture.SetPixel(w, h, brain.Results[0] > 0f ? Color.cyan : Color.yellow);
+                texture.SetPixel(w, h, Color.Lerp(Color.cyan, Color.yellow, brain.Results[0]));
             }
         }
 
+        // Draw points used for training
         for (int i = 0; i < points.Count; i++)
         {
             var p = points[i];
             int x = Mathf.FloorToInt((p.x + 2f) * (float)texture.width / 4f);
             int y = Mathf.FloorToInt((p.y + 2f) * (float)texture.height / 4f);
             if (x < 0 || x >= texture.width || y < 0 || y >= texture.height) continue;
-            texture.SetPixel(x, y, brain.Results[0] > 0f ? Color.blue : Color.white);
+            texture.SetPixel(x, y, TestFunc(p.x, p.y) > 0f ? Color.blue : Color.red);
         }
 
         texture.Apply();
     }
 
-    private void LearnPoint(int i)
+    private float TestFunc(float x, float y)
     {
-        var p = points[i];
-        targets[0] = -p.x > p.y ? 1f : -1f;
+        return -x*x > y*y*y ? 1f : 0f;
+    }
+
+    private void LearnPoint(Vector2 p)
+    {
+        targets[0] = TestFunc(p.x, p.y);
         brain.SensoryInputs[0] = p.x;
         brain.SensoryInputs[1] = p.y;
-        brain.Train(targets, brain.learningRate);
-        brain.Think();
+        brain.Learn(targets, brain.learningRate);
+    }
+
+    private static void Shuffle<T>(T[] a)
+    {
+        int l = a.Length;
+        for (int n = 0; n < l; n++)
+        {
+            int m = UnityEngine.Random.Range(n, l);
+            var tmp = a[n];
+            a[n] = a[m];
+            a[m] = tmp;
+        }
     }
 }
