@@ -26,7 +26,7 @@ public class NeuralNetwork : MonoBehaviour
             // Initialize the each neuron's bias with random noise
             for (int outIndex = 0; outIndex < numOutputs; outIndex++)
             {
-                biases[outIndex] = UnityEngine.Random.Range(-0.5f, 0.5f);
+                biases[outIndex] = UnityEngine.Random.Range(-0.01f, 0.01f);
             }
 
             // Initialize the matrix of synaptic weights with random noise
@@ -132,7 +132,7 @@ public class NeuralNetwork : MonoBehaviour
     public float[] Targets { get; private set; }
     public float[] Results { get; private set; }
     public float Loss { get; private set; }
-    [Range(0.001f, 0.5f)] public float learningRate = 0.01f;
+    [Range(0.0001f, 0.5f)] public float learningRate = 0.001f;
     public int numTrainingIterations = 1000;
 
     public void Initialize(int numInputs)
@@ -192,7 +192,7 @@ public class NeuralNetwork : MonoBehaviour
         float[,] nextLayerWeights = null;
         for (int i = layers.Count - 1; i >= 0; i--)
         {
-            var layer = layers[i];
+            Layer layer = layers[i];
             layer.BackPropagate(errors, nextLayerWeights);
             layer.UpdateWeightsAndBiases(learningRate);
             errors = layer.feedback;

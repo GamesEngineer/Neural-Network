@@ -29,7 +29,6 @@ public class ClassifierNetworkTest : MonoBehaviour
         outputImage.sprite = Sprite.Create(texture, new Rect(0,0, texture.width, texture.height), Vector2.one * 0.5f);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         int seed = (int)System.DateTime.Now.Ticks;
@@ -37,25 +36,28 @@ public class ClassifierNetworkTest : MonoBehaviour
         Debug.Log($"Seed: {seed}");
 
         Vector2[] shuffledPoints = points.ToArray();
-        brain.Initialize(2);
+        brain.Initialize(numInputs: 2);
         int iter;
+        float maxLoss = 0f;
         for (iter = 0; iter < brain.numTrainingIterations; iter++)
         {
-            Shuffle(shuffledPoints);
+            //Shuffle(shuffledPoints);
+            maxLoss = 0f;
             for (int i = 0; i < points.Count; i++)
             {
                 LearnPoint(shuffledPoints[i]);
+                maxLoss = Mathf.Max(brain.Loss, maxLoss);
             }
             if (iter < 100 || iter % 100 == 0)
             {
-                Debug.Log($"Loss is {brain.Loss} after {iter} iterations");
+                Debug.Log($"Loss is {maxLoss} after {iter} iterations");
             }
-            if (brain.Loss < 1e-20f)
+            if (maxLoss < 1e-20f)
             {
                 break; // good enough
             }
         }
-        Debug.Log($"Final loss is {brain.Loss} after {iter} iterations");
+        Debug.Log($"Final loss is {maxLoss} after {iter} iterations");
 
         // Draw map of learned predictions
         for (int h = 0; h < texture.height; h++)
@@ -84,7 +86,7 @@ public class ClassifierNetworkTest : MonoBehaviour
 
     private float TestFunc(float x, float y)
     {
-        return -x*x > y*y*y ? 1f : 0f;
+        return 0.5f-x > y*y ? 1.0f : 0f;
     }
 
     private void LearnPoint(Vector2 p)
