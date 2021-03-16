@@ -131,9 +131,12 @@ public class NeuralNetwork : MonoBehaviour
     public float[] SensoryInputs { get; private set; }
     public float[] Targets { get; private set; }
     public float[] Results { get; private set; }
+    public float[] Errors { get; private set; }
     public float Loss { get; private set; }
     [Range(0.0001f, 0.5f)] public float learningRate = 0.001f;
     public int numTrainingIterations = 1000;
+    public int numSamplesPerBatch = 20;
+    public int CurrentBatchSize { get; private set; }
 
     public void Initialize(int numInputs)
     {
@@ -153,6 +156,8 @@ public class NeuralNetwork : MonoBehaviour
 
         Results = OutputLayer.outputs;
         Targets = new float[Results.Length];
+        Errors = new float[Results.Length];
+        CurrentBatchSize = 0;
     }
 
     private static float CalculateLoss(float[] targets, float[] outputs, float[] errors)
@@ -169,34 +174,66 @@ public class NeuralNetwork : MonoBehaviour
         return loss;
     }
 
+    private static float AccumulateErrors(float[] targets, float[] outputs, float[] errors)
+    {
+        Assert.IsTrue(targets.Length == outputs.Length);
+        Assert.IsTrue(errors.Length == outputs.Length);
+        float loss = 0f;
+        for (int i = 0; i < outputs.Length; i++)
+        {
+            float error = targets[i] - outputs[i];
+            errors[i] += error;
+            loss += error * error * 0.5f;
+        }
+        return loss;
+    }
+
     public void Think()
     {
+        // Feed the sensory inputs forward through the network
         foreach (var l in layers)
         {
             l.Activate();
         }
     }
 
-    public void Learn(float[] targets, float learningRate)
+    public void Learn(bool finishTheCurrentBatch = false)
     {
-        // Populate the network with feed-forward data
-        Think();
+        CurrentBatchSize++;
+        Loss = AccumulateErrors(Targets, OutputLayer.outputs, Errors) / CurrentBatchSize;
 
-        float[] errors = new float[OutputLayer.feedback.Length];
-        Loss = CalculateLoss(targets, OutputLayer.outputs, errors);
+        if (CurrentBatchSize < numSamplesPerBatch && !finishTheCurrentBatch)
+        {
+            return;
+        }
+
+        // Normalize the errors, based on the number of samples in the training batch
+        float invBatchSize = 1f / CurrentBatchSize;
+        for (int i = 0; i < Errors.Length; i++)
+        {
+            Errors[i] *= invBatchSize;
+        }
 
         // Propagate errors backward through the network,
         // and update each layer's weights and biases with
         // gradient descent in order to reduce error in
         // future predictions.
+        float[] feedback = Errors;
         float[,] nextLayerWeights = null;
         for (int i = layers.Count - 1; i >= 0; i--)
         {
             Layer layer = layers[i];
-            layer.BackPropagate(errors, nextLayerWeights);
+            layer.BackPropagate(feedback, nextLayerWeights);
             layer.UpdateWeightsAndBiases(learningRate);
-            errors = layer.feedback;
+            feedback = layer.feedback;
             nextLayerWeights = layer.weights;
         }
+
+        // Clear the accumulated errors
+        for (int i = 0; i < Errors.Length; i++)
+        {
+            Errors[i] = 0f;
+        }
+        CurrentBatchSize = 0;
     }
 }
