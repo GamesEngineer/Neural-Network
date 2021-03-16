@@ -58,6 +58,11 @@ public class NeuralNetwork : MonoBehaviour
             }
         }
 
+        /// <summary>
+        /// Propagates errors backward through the network layer.
+        /// </summary>
+        /// <param name="errors">Partial derivative of errors from next layer.</param>
+        /// <param name="nextLayerWeights">Weights of the next layer when the errors were computed</param>
         public void BackPropagate(float[] errors, float[,] nextLayerWeights)
         {
             int numInputs = inputs.Length;
@@ -86,7 +91,7 @@ public class NeuralNetwork : MonoBehaviour
                 for (int outIter = 0; outIter < numOutputs; outIter++)
                 {
                     float slope = dActivationFunc(outputs[outIter]);
-                    float weightedError = 0f;
+                    float weightedError = 0f; // FIXME? account for bias error
                     for (int nextIter = 0; nextIter < numErrors; nextIter++)
                     {
                         weightedError += errors[nextIter] * nextLayerWeights[nextIter, outIter];
@@ -224,9 +229,11 @@ public class NeuralNetwork : MonoBehaviour
         {
             Layer layer = layers[i];
             layer.BackPropagate(feedback, nextLayerWeights);
-            layer.UpdateWeightsAndBiases(learningRate);
             feedback = layer.feedback;
-            nextLayerWeights = layer.weights;
+            //nextLayerWeights = layer.weights;
+            nextLayerWeights = new float[layer.weights.GetLength(0),layer.weights.GetLength(1)];
+            Array.Copy(layer.weights, nextLayerWeights, layer.weights.Length);
+            layer.UpdateWeightsAndBiases(learningRate);
         }
 
         // Clear the accumulated errors

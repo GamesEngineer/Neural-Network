@@ -401,9 +401,9 @@ MonoBehaviour:
     activationType: 2
   - neuronCount: 1
     activationType: 2
-  learningRate: 0.01
+  learningRate: 0.002
   numTrainingIterations: 2000
-  numSamplesPerBatch: 10
+  numSamplesPerBatch: 1
 --- !u!4 &845530011
 Transform:
   m_ObjectHideFlags: 0
