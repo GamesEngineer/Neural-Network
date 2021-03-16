@@ -138,8 +138,7 @@ public class NeuralNetwork : MonoBehaviour
     public float[] Results { get; private set; }
     public float[] Errors { get; private set; }
     public float Loss { get; private set; }
-    [Range(0.0001f, 0.5f)] public float learningRate = 0.001f;
-    public int numTrainingIterations = 1000;
+    [Range(0.0001f, 0.01f)] public float learningRate = 0.001f;
     public int numSamplesPerBatch = 20;
     public int CurrentBatchSize { get; private set; }
 
@@ -204,6 +203,7 @@ public class NeuralNetwork : MonoBehaviour
 
     public void Learn(bool finishTheCurrentBatch = false)
     {
+        Think();
         CurrentBatchSize++;
         Loss = AccumulateErrors(Targets, OutputLayer.outputs, Errors) / CurrentBatchSize;
 
@@ -219,10 +219,7 @@ public class NeuralNetwork : MonoBehaviour
             Errors[i] *= invBatchSize;
         }
 
-        // Propagate errors backward through the network,
-        // and update each layer's weights and biases with
-        // gradient descent in order to reduce error in
-        // future predictions.
+        // Propagate errors backward through the network
         float[] feedback = Errors;
         float[,] nextLayerWeights = null;
         for (int i = layers.Count - 1; i >= 0; i--)
@@ -230,10 +227,13 @@ public class NeuralNetwork : MonoBehaviour
             Layer layer = layers[i];
             layer.BackPropagate(feedback, nextLayerWeights);
             feedback = layer.feedback;
-            //nextLayerWeights = layer.weights;
-            nextLayerWeights = new float[layer.weights.GetLength(0),layer.weights.GetLength(1)];
-            Array.Copy(layer.weights, nextLayerWeights, layer.weights.Length);
-            layer.UpdateWeightsAndBiases(learningRate);
+            nextLayerWeights = layer.weights;
+        }
+
+        // Update each layer's weights and biases with the error feedback
+        foreach (var layer in layers)
+        {
+            layer.UpdateWeightsAndBiases(learningRate * numSamplesPerBatch);
         }
 
         // Clear the accumulated errors
