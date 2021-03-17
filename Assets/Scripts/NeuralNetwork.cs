@@ -8,6 +8,7 @@ public class NeuralNetwork : MonoBehaviour
     public class Layer
     {
         public readonly float[] inputs; // "owned" by previous layer
+        public readonly float[] preOutputs; // pre-activation value of neurons
         public readonly float[] outputs; // neuron outputs
         public readonly float[,] weights; // matrix [outputs, inputs] of synaptic weights (one row of weights for each output neuron)
         public readonly float[] biases; // offset added to weighted sum of inputs
@@ -18,6 +19,7 @@ public class NeuralNetwork : MonoBehaviour
         {
             int numInputs = inputs.Length;
             this.inputs = inputs;
+            preOutputs = new float[numOutputs];
             outputs = new float[numOutputs];
             weights = new float[numOutputs, numInputs];
             biases = new float[numOutputs];
@@ -54,7 +56,9 @@ public class NeuralNetwork : MonoBehaviour
                 {
                     weightedSum += inputs[inIndex] * weights[outIndex, inIndex];
                 }
-                outputs[outIndex] = activationFunc(weightedSum + biases[outIndex]);
+                float preOutput = weightedSum + biases[outIndex];
+                preOutputs[outIndex] = preOutput;
+                outputs[outIndex] = activationFunc(preOutput);
             }
         }
 
@@ -82,7 +86,7 @@ public class NeuralNetwork : MonoBehaviour
                 Assert.IsTrue(numErrors == numOutputs);
                 for (int outIter = 0; outIter < numOutputs; outIter++)
                 {
-                    float slope = dActivationFunc(outputs[outIter]);
+                    float slope = dActivationFunc(preOutputs[outIter]);
                     feedback[outIter] = slope * errors[outIter];
                 }
             }
@@ -90,8 +94,8 @@ public class NeuralNetwork : MonoBehaviour
             {
                 for (int outIter = 0; outIter < numOutputs; outIter++)
                 {
-                    float slope = dActivationFunc(outputs[outIter]);
-                    float weightedError = 0f; // FIXME? account for bias error
+                    float slope = dActivationFunc(preOutputs[outIter]);
+                    float weightedError = 0f;
                     for (int nextIter = 0; nextIter < numErrors; nextIter++)
                     {
                         weightedError += errors[nextIter] * nextLayerWeights[nextIter, outIter];
@@ -205,7 +209,8 @@ public class NeuralNetwork : MonoBehaviour
     {
         Think();
         CurrentBatchSize++;
-        Loss = AccumulateErrors(Targets, OutputLayer.outputs, Errors) / CurrentBatchSize;
+        float invBatchSize = 1f / CurrentBatchSize;
+        Loss = AccumulateErrors(Targets, Results, Errors) * invBatchSize;
 
         if (CurrentBatchSize < numSamplesPerBatch && !finishTheCurrentBatch)
         {
@@ -213,7 +218,6 @@ public class NeuralNetwork : MonoBehaviour
         }
 
         // Normalize the errors, based on the number of samples in the training batch
-        float invBatchSize = 1f / CurrentBatchSize;
         for (int i = 0; i < Errors.Length; i++)
         {
             Errors[i] *= invBatchSize;

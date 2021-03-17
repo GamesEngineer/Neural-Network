@@ -547,9 +547,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   layersInfo:
-  - neuronCount: 8
+  - neuronCount: 16
     activationType: 2
-  - neuronCount: 8
+  - neuronCount: 16
     activationType: 2
   - neuronCount: 1
     activationType: 2

@@ -6,7 +6,11 @@ public class ClassifierNetworkTest : MonoBehaviour
 {
     private static float TestFunc(float x, float y)
     {
-        return (x * (x - 1f) - y * y) > 0f ? 1f : 0f;
+#if false
+        return (x * (x - 1f) - y * (0.333f * y + 0.2f)) > 0f ? 1f : 0f;
+#else
+        return Mathf.Sin(3f*x) * Mathf.Sin(2f*y) > 0.2f ? 1f : 0f;
+#endif
     }
 
     public List<Vector2> points = new List<Vector2>();
