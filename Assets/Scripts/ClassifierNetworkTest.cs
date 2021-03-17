@@ -101,7 +101,7 @@ public class ClassifierNetworkTest : MonoBehaviour
         meanLoss /= points.Count;
         if (trainingEpoch < 100 || trainingEpoch % 100 == 0)
         {
-            Debug.Log($"Loss is {meanLoss}|{maxLoss} after {trainingEpoch} iterations");
+            Debug.Log($"Loss is {meanLoss} | {maxLoss} after {trainingEpoch} iterations");
         }
     }
 
