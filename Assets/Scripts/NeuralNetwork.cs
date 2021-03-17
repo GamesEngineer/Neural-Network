@@ -28,7 +28,7 @@ public class NeuralNetwork : MonoBehaviour
             // Initialize the each neuron's bias with random noise
             for (int outIndex = 0; outIndex < numOutputs; outIndex++)
             {
-                biases[outIndex] = UnityEngine.Random.Range(-0.01f, 0.01f);
+                biases[outIndex] = UnityEngine.Random.Range(-1f, 1f);
             }
 
             // Initialize the matrix of synaptic weights with random noise
@@ -36,7 +36,9 @@ public class NeuralNetwork : MonoBehaviour
             {
                 for (int inIndex = 0; inIndex < numInputs; inIndex++)
                 {
-                    weights[outIndex, inIndex] = UnityEngine.Random.Range(-0.5f, 0.5f);
+                    float r = UnityEngine.Random.Range(-0.25f, 0.25f)
+                            + UnityEngine.Random.Range(-0.25f, 0.25f);
+                    weights[outIndex, inIndex] = r;
                 }
             }
         }
