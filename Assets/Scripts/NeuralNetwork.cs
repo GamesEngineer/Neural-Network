@@ -13,9 +13,10 @@ public class NeuralNetwork : MonoBehaviour
         public readonly float[,] weights; // matrix [outputs, inputs] of synaptic weights (one row of weights for each output neuron)
         public readonly float[] biases; // offset added to weighted sum of inputs
         public readonly float[] feedback; // learning via back propagation
-        public Neuron.ActivationType activationType = Neuron.ActivationType.ReLU;
+        public readonly Func<float, float> activationFunc;
+        public readonly Func<float, float> dActivationFunc;
 
-        public Layer(float[] inputs, int numOutputs)
+        public Layer(float[] inputs, int numOutputs, Neuron.ActivationType activationType)
         {
             int numInputs = inputs.Length;
             this.inputs = inputs;
@@ -24,11 +25,13 @@ public class NeuralNetwork : MonoBehaviour
             weights = new float[numOutputs, numInputs];
             biases = new float[numOutputs];
             feedback = new float[numOutputs];
+            activationFunc = Neuron.ActivationFunctions[(int)activationType];
+            dActivationFunc = Neuron.ActivationDerivatives[(int)activationType];
 
             // Initialize the each neuron's bias with random noise
             for (int outIndex = 0; outIndex < numOutputs; outIndex++)
             {
-                biases[outIndex] = UnityEngine.Random.Range(-1f, 1f);
+                biases[outIndex] = UnityEngine.Random.Range(-0.1f, 0.1f);
             }
 
             // Initialize the matrix of synaptic weights with random noise
@@ -48,7 +51,6 @@ public class NeuralNetwork : MonoBehaviour
             int numOutputs = outputs.Length;
             Assert.IsTrue(weights.GetLength(0) == numOutputs);
             Assert.IsTrue(weights.GetLength(1) == numInputs);
-            var activationFunc = Neuron.ActivationFunctions[(int)activationType];
 
             for (int outIndex = 0; outIndex < numOutputs; outIndex++)
             {
@@ -79,7 +81,6 @@ public class NeuralNetwork : MonoBehaviour
             Assert.IsTrue(weights.GetLength(1) == numInputs);
             Assert.IsTrue(biases.Length == numOutputs);
             Assert.IsTrue(feedback.Length == numOutputs);
-            var dActivationFunc = Neuron.ActivationDerivatives[(int)activationType];
 
             // Calculate feedback signals
             if (nextLayerWeights == null)
@@ -157,7 +158,7 @@ public class NeuralNetwork : MonoBehaviour
         for (int i = 0; i < layersInfo.Count; i++)
         {
             var l = layersInfo[i];
-            var layer = new Layer(inputs, l.neuronCount);
+            var layer = new Layer(inputs, l.neuronCount, l.activationType);
             layers.Add(layer);
             // For the next layer
             inputs = layer.outputs;
