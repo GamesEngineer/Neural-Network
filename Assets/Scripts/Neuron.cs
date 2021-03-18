@@ -8,10 +8,11 @@ public static class Neuron
         Tanh,
         Sigmoid,
         ReLU,
+        ELU,
     }
 
-    public static Func<float, float>[] ActivationFunctions = { Tanh, Sigmoid, ReLU };
-    public static Func<float, float>[] ActivationDerivatives = { dTanh, dSigmoid, dReLU };
+    public static Func<float, float>[] ActivationFunctions = { Tanh, Sigmoid, ReLU, ELU };
+    public static Func<float, float>[] ActivationDerivatives = { dTanh, dSigmoid, dReLU, dELU };
 
     // Range: [-1..+1]
     private static float Tanh(float x)
@@ -47,5 +48,15 @@ public static class Neuron
     private static float dReLU(float x)
     {
         return x > 0f ? 1f : 0f;
+    }
+
+    private static float ELU(float x)
+    {
+        return x >= 0f ? x : 0.1f * Mathf.Exp(x - 1f);
+    }
+
+    private static float dELU(float x)
+    {
+        return x >= 0f ? 1f : 0.1f * Mathf.Exp(x);
     }
 }
