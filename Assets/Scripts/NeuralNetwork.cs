@@ -36,8 +36,7 @@ public class NeuralNetwork : MonoBehaviour
             {
                 for (int inIndex = 0; inIndex < numInputs; inIndex++)
                 {
-                    float r = UnityEngine.Random.Range(-0.25f, 0.25f)
-                            + UnityEngine.Random.Range(-0.25f, 0.25f);
+                    float r = UnityEngine.Random.Range(-0.5f, 0.5f);
                     weights[outIndex, inIndex] = r;
                 }
             }
@@ -177,11 +176,12 @@ public class NeuralNetwork : MonoBehaviour
         float loss = 0f;
         for (int i = 0; i < outputs.Length; i++)
         {
+            // squared error
             float error = targets[i] - outputs[i];
-            errors[i] = error;
-            loss += error * error * 0.5f;
+            loss += error * error;
+            errors[i] = 2f * error; // derivative of (error)^2 is 2*error
         }
-        return loss;
+        return loss / outputs.Length;
     }
 
     private static float AccumulateErrors(float[] targets, float[] outputs, float[] errors)
@@ -191,11 +191,12 @@ public class NeuralNetwork : MonoBehaviour
         float loss = 0f;
         for (int i = 0; i < outputs.Length; i++)
         {
+            // squared error
             float error = targets[i] - outputs[i];
-            errors[i] += error;
-            loss += error * error * 0.5f;
+            loss += error * error;
+            errors[i] += 2f * error; // derivative of (error)^2 is 2*error
         }
-        return loss;
+        return loss / outputs.Length;
     }
 
     public void Think()
@@ -207,7 +208,7 @@ public class NeuralNetwork : MonoBehaviour
         }
     }
 
-    public void Learn(bool finishTheCurrentBatch = false)
+    public void Learn(float learningRateMultiplier = 1f, bool finishTheCurrentBatch = false)
     {
         Think();
         CurrentBatchSize++;
@@ -219,7 +220,7 @@ public class NeuralNetwork : MonoBehaviour
             return;
         }
 
-        // Normalize the errors, based on the number of samples in the training batch
+        // Average the errors, based on the number of samples in the training batch
         for (int i = 0; i < Errors.Length; i++)
         {
             Errors[i] *= invBatchSize;
@@ -239,7 +240,7 @@ public class NeuralNetwork : MonoBehaviour
         // Update each layer's weights and biases with the error feedback
         foreach (var layer in layers)
         {
-            layer.UpdateWeightsAndBiases(learningRate * numSamplesPerBatch);
+            layer.UpdateWeightsAndBiases(learningRate * learningRateMultiplier * numSamplesPerBatch);
         }
 
         // Clear the accumulated errors

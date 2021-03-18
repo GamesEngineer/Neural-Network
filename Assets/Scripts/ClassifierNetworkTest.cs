@@ -17,11 +17,13 @@ public class ClassifierNetworkTest : MonoBehaviour
     public Image outputImage;
     public Image maxLossBarImage;
     public Image meanLossBarImage;
+    public RawImage lossGraph;
     public bool quantizePreditictions = true;
     public int numTrainingEpochs = 2000;
     private int trainingEpoch;
     private Vector2[] shuffledPoints;
     private Texture2D texture;
+    private Texture2D graphTexture;
     private NeuralNetwork brain;
     private float maxLoss;
     private float meanLoss;
@@ -41,6 +43,9 @@ public class ClassifierNetworkTest : MonoBehaviour
         }
         texture.Apply();
         outputImage.sprite = Sprite.Create(texture, new Rect(0,0, texture.width, texture.height), Vector2.one * 0.5f);
+
+        graphTexture = new Texture2D(64, 32);
+        lossGraph.texture = graphTexture;
     }
 
     void Start()
@@ -68,6 +73,7 @@ public class ClassifierNetworkTest : MonoBehaviour
         texture.Apply();
         maxLossBarImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 1000f * Mathf.Sqrt(maxLoss));
         meanLossBarImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 1000f * Mathf.Sqrt(meanLoss));
+        DrawLossGraph();
     }
 
     private void Reset()
@@ -77,6 +83,7 @@ public class ClassifierNetworkTest : MonoBehaviour
         trainingEpoch = 0;
         maxLoss = 0f;
         meanLoss = 0f;
+        graphTexture.SetPixels(new Color[graphTexture.width * graphTexture.height]);
     }
 
     private void LearnPoint(Vector2 p)
@@ -84,7 +91,7 @@ public class ClassifierNetworkTest : MonoBehaviour
         brain.Targets[0] = TestFunc(p.x, p.y);
         brain.SensoryInputs[0] = p.x;
         brain.SensoryInputs[1] = p.y;
-        brain.Learn();
+        brain.Learn((float)(numTrainingEpochs - trainingEpoch) / (float)numTrainingEpochs);
     }
 
     private void ProcessEpoch()
@@ -138,6 +145,24 @@ public class ClassifierNetworkTest : MonoBehaviour
             if (x < 0 || x >= texture.width || y < 0 || y >= texture.height) continue;
             texture.SetPixel(x, y, Color.Lerp(Color.blue, Color.red, TestFunc(p.x, p.y)));
         }
+    }
+
+    private void DrawLossGraph()
+    {
+        if (trainingEpoch > numTrainingEpochs) return;
+        int x = Mathf.FloorToInt(graphTexture.width * (float)(trainingEpoch-1) / (float)numTrainingEpochs);
+        for (int h = 0; h < graphTexture.height; h++)
+        {
+            var c = graphTexture.GetPixel(x, h);
+            c.a = 1f;
+            graphTexture.SetPixel(x, h, c);
+        }
+        int y = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Clamp01(maxLoss)) * (graphTexture.height - 1));
+        graphTexture.SetPixel(x, y, Color.yellow);
+        y = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Clamp01(meanLoss)) * (graphTexture.height - 1));
+        graphTexture.SetPixel(x, y, Color.white);
+
+        graphTexture.Apply();
     }
 
     private static void Shuffle<T>(T[] a)
