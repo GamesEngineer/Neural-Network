@@ -14,7 +14,7 @@ public class NeuralNetwork : MonoBehaviour
         public readonly float[] biases; // offset added to weighted sum of inputs
         public readonly float[] feedback; // learning via back propagation
         public readonly Func<float, float> activationFunc;
-        public readonly Func<float, float> dActivationFunc;
+        public readonly Func<float, float> dActivationFunc; // derivative of activation fuction
 
         public Layer(float[] inputs, int numOutputs, Neuron.ActivationType activationType)
         {

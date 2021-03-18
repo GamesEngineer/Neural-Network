@@ -42,7 +42,8 @@ public static class Neuron
     // Range: [0..infinity]
     private static float ReLU(float x)
     {
-        return Mathf.Max(0f, x);
+        //return Mathf.Max(0f, x);
+        return x > 0f ? x : 0f;
     }
 
     private static float dReLU(float x)

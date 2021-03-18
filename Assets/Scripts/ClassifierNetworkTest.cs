@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class ClassifierNetworkTest : MonoBehaviour
 {
-    public enum TestFunction { Elipse, Hyperbola, SinePatches }
     public TestFunction function;
     public List<Vector2> points = new List<Vector2>();
     public RawImage domainImage;
@@ -22,7 +21,8 @@ public class ClassifierNetworkTest : MonoBehaviour
     private float meanLoss;
     private Func<Vector2, float> testFunction;
 
-    private static readonly Func<Vector2, float>[] testFunctions = { ElipseFunc, HyperbolaFunc, SinePatchesFunc };
+    public enum TestFunction { Linear, Elipse, Hyperbola, SinePatches }
+    private static readonly Func<Vector2, float>[] testFunctions = { LinearFunc, ElipseFunc, HyperbolaFunc, SinePatchesFunc };
 
     private void Awake()
     {
@@ -55,7 +55,7 @@ public class ClassifierNetworkTest : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.R))
         {
             Reset();
         }
@@ -82,6 +82,11 @@ public class ClassifierNetworkTest : MonoBehaviour
         meanLoss = 0f;
         domainTexture.SetPixels32(new Color32[domainTexture.width * domainTexture.height]);
         graphTexture.SetPixels32(new Color32[graphTexture.width * graphTexture.height]);
+    }
+
+    private static float LinearFunc(Vector2 p)
+    {
+        return (0.333f - p.x) > 0.5f * p.y ? 1f : 0f;
     }
 
     private static float ElipseFunc(Vector2 p)
