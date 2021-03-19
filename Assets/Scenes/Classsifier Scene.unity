@@ -633,7 +633,7 @@ MonoBehaviour:
   - neuronCount: 16
     activationType: 0
   - neuronCount: 16
-    activationType: 2
+    activationType: 0
   - neuronCount: 1
     activationType: 1
   learningRate: 0.01
@@ -664,7 +664,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1dc6b0430ef60c243942c9e1fed7056c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  function: 2
+  function: 3
   points:
   - {x: 0.18941522, y: 1.2827096}
   - {x: 1.0179315, y: 0.3977549}
