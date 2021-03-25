@@ -13,7 +13,7 @@ public class NeuralNetwork : MonoBehaviour
         public readonly float[,] weights; // matrix [outputs, inputs] of synaptic weights (one row of weights for each output neuron)
         public readonly float[] biases; // offset added to weighted sum of inputs
         public readonly float[] feedback; // learning via back propagation
-        public readonly Func<float, float> activationFunc;
+        public readonly Func<float, float> activationFunc; // neuron activation function
         public readonly Func<float, float> dActivationFunc; // derivative of activation fuction
 
         public Layer(float[] inputs, int numOutputs, Neuron.ActivationType activationType)
@@ -45,6 +45,10 @@ public class NeuralNetwork : MonoBehaviour
             }
         }
 
+        /// <summary>
+        /// Activate this layer's ouputs based on its current inputs.
+        /// This method is used by the neural network during its Think phase.
+        /// </summary>
         public void Activate()
         {
             int numInputs = inputs.Length;
@@ -52,6 +56,10 @@ public class NeuralNetwork : MonoBehaviour
             Assert.IsTrue(weights.GetLength(0) == numOutputs);
             Assert.IsTrue(weights.GetLength(1) == numInputs);
 
+            /// For each neuron in the layer, the inputs are fed forward through the layer.
+            /// This involves multiplying each input by the neuron's synaptic weights, adding
+            /// the neuron's bias value, and then activating the neuron using the layer's
+            /// activation function.
             for (int outIndex = 0; outIndex < numOutputs; outIndex++)
             {
                 float weightedSum = 0f;
@@ -66,24 +74,28 @@ public class NeuralNetwork : MonoBehaviour
         }
 
         /// <summary>
-        /// Propagates errors backward through the network layer.
+        /// Updates this layer's feedback by propagating errors backward through the layer.
+        /// This method is used by the neural network during its Learn phase.
         /// </summary>
-        /// <param name="errors">Partial derivative of errors from next layer.</param>
-        /// <param name="nextLayerWeights">Weights of the next layer when the errors were computed</param>
+        /// <param name="errors">Errors/feedback to be propagated backwards through this layer. Mathematically, these are partial derivatives of the neural network's loss function with respect to this layer's preOutputs.</param>
+        /// <param name="nextLayerWeights">Weights of the next layer when the errors were computed. Should be null for the output layer.</param>
         public void BackPropagate(float[] errors, float[,] nextLayerWeights)
         {
             int numInputs = inputs.Length;
             int numOutputs = outputs.Length;
             int numErrors = errors.Length;
-            Assert.IsTrue(nextLayerWeights == null || nextLayerWeights.GetLength(0) == numErrors);
-            Assert.IsTrue(nextLayerWeights == null || nextLayerWeights.GetLength(1) == numOutputs);
             Assert.IsTrue(weights.GetLength(0) == numOutputs);
             Assert.IsTrue(weights.GetLength(1) == numInputs);
-            Assert.IsTrue(biases.Length == numOutputs);
             Assert.IsTrue(feedback.Length == numOutputs);
 
-            // Calculate feedback signals
-            if (nextLayerWeights == null)
+            // When computing this layer's feedback signals, we must take into account its
+            // connection with the next layer in order to properly calculate the
+            // partial derivatives of the loss with respect to this layer's pre-ouputs.
+            // However, if this layer is an "ouput layer," then it is not connected to a
+            // next layer, and so the calculation of its feedback signals is simpler.
+            bool isOutputLayer = (nextLayerWeights == null);
+
+            if (isOutputLayer)
             {
                 Assert.IsTrue(numErrors == numOutputs);
                 for (int outIter = 0; outIter < numOutputs; outIter++)
@@ -94,6 +106,8 @@ public class NeuralNetwork : MonoBehaviour
             }
             else
             {
+                Assert.IsTrue(nextLayerWeights.GetLength(0) == numErrors);
+                Assert.IsTrue(nextLayerWeights.GetLength(1) == numOutputs);
                 for (int outIter = 0; outIter < numOutputs; outIter++)
                 {
                     float slope = dActivationFunc(preOutputs[outIter]);
@@ -107,6 +121,11 @@ public class NeuralNetwork : MonoBehaviour
             }
         }
 
+        /// <summary>
+        /// Apply this layer's feeback to 
+        /// This method is used by the neural network during its Learn phase.
+        /// </summary>
+        /// <param name="learningRate"></param>
         public void UpdateWeightsAndBiases(float learningRate)
         {
             int numInputs = inputs.Length;
@@ -124,6 +143,8 @@ public class NeuralNetwork : MonoBehaviour
                 {
                     weights[outIter, inIter] += change * inputs[inIter];
                 }
+                // Clear the feedback so we don't use it again (useful for batch learning)
+                feedback[outIter] = 0f;
             }
         }
     }
@@ -145,8 +166,6 @@ public class NeuralNetwork : MonoBehaviour
     public float[] Errors { get; private set; }
     public float Loss { get; private set; }
     [Range(0.0001f, 0.01f)] public float learningRate = 0.001f;
-    public int numSamplesPerBatch = 20;
-    public int CurrentBatchSize { get; private set; }
 
     public void Initialize(int numInputs)
     {
@@ -167,37 +186,6 @@ public class NeuralNetwork : MonoBehaviour
         Results = OutputLayer.outputs;
         Targets = new float[Results.Length];
         Errors = new float[Results.Length];
-        CurrentBatchSize = 0;
-    }
-
-    private static float CalculateLoss(float[] targets, float[] outputs, float[] errors)
-    {
-        Assert.IsTrue(targets.Length == outputs.Length);
-        Assert.IsTrue(errors.Length == outputs.Length);
-        float loss = 0f;
-        for (int i = 0; i < outputs.Length; i++)
-        {
-            // squared error
-            float error = targets[i] - outputs[i];
-            loss += error * error;
-            errors[i] = 2f * error; // derivative of (error)^2 is 2*error
-        }
-        return loss / outputs.Length;
-    }
-
-    private static float AccumulateErrors(float[] targets, float[] outputs, float[] errors)
-    {
-        Assert.IsTrue(targets.Length == outputs.Length);
-        Assert.IsTrue(errors.Length == outputs.Length);
-        float loss = 0f;
-        for (int i = 0; i < outputs.Length; i++)
-        {
-            // squared error
-            float error = targets[i] - outputs[i];
-            loss += error * error;
-            errors[i] += 2f * error; // derivative of (error)^2 is 2*error
-        }
-        return loss / outputs.Length;
     }
 
     public void Think()
@@ -209,23 +197,10 @@ public class NeuralNetwork : MonoBehaviour
         }
     }
 
-    public void Learn(float learningRateMultiplier = 1f, bool finishTheCurrentBatch = false)
+    public void Learn(float learningRateMultiplier = 1f)
     {
         Think();
-        CurrentBatchSize++;
-        float invBatchSize = 1f / CurrentBatchSize;
-        Loss = AccumulateErrors(Targets, Results, Errors) * invBatchSize;
-
-        if (CurrentBatchSize < numSamplesPerBatch && !finishTheCurrentBatch)
-        {
-            return;
-        }
-
-        // Average the errors, based on the number of samples in the training batch
-        for (int i = 0; i < Errors.Length; i++)
-        {
-            Errors[i] *= invBatchSize;
-        }
+        Loss = CalculateLoss(Targets, Results, Errors);
 
         // Propagate errors backward through the network
         float[] feedback = Errors;
@@ -241,14 +216,22 @@ public class NeuralNetwork : MonoBehaviour
         // Update each layer's weights and biases with the error feedback
         foreach (var layer in layers)
         {
-            layer.UpdateWeightsAndBiases(learningRate * learningRateMultiplier * numSamplesPerBatch);
+            layer.UpdateWeightsAndBiases(learningRate * learningRateMultiplier);
         }
+    }
 
-        // Clear the accumulated errors
-        for (int i = 0; i < Errors.Length; i++)
+    private static float CalculateLoss(float[] targets, float[] outputs, float[] errors)
+    {
+        Assert.IsTrue(targets.Length == outputs.Length);
+        Assert.IsTrue(errors.Length == outputs.Length);
+        float loss = 0f;
+        for (int i = 0; i < outputs.Length; i++)
         {
-            Errors[i] = 0f;
+            // squared error
+            float error = targets[i] - outputs[i];
+            loss += error * error;
+            errors[i] = 2f * error; // derivative of (error)^2 is 2*error
         }
-        CurrentBatchSize = 0;
+        return loss / outputs.Length;
     }
 }
