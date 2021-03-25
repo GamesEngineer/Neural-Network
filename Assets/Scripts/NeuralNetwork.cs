@@ -122,7 +122,7 @@ public class NeuralNetwork : MonoBehaviour
         }
 
         /// <summary>
-        /// Apply this layer's feeback to 
+        /// Apply this layer's feeback to the weights and biases.
         /// This method is used by the neural network during its Learn phase.
         /// </summary>
         /// <param name="learningRate"></param>
