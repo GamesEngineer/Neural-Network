@@ -77,7 +77,8 @@ public class NeuralNetwork : MonoBehaviour
         /// Updates this layer's feedback by propagating errors backward through the layer.
         /// This method is used by the neural network during its Learn phase.
         /// </summary>
-        /// <param name="errors">Errors/feedback to be propagated backwards through this layer. Mathematically, these are partial derivatives of the neural network's loss function with respect to this layer's preOutputs.</param>
+        /// <param name="errors">Errors/feedback to be propagated backwards through this layer.
+        /// Mathematically, these are partial derivatives of the neural network's loss function with respect to this layer's preOutputs.</param>
         /// <param name="nextLayerWeights">Weights of the next layer when the errors were computed. Should be null for the output layer.</param>
         public void BackPropagate(float[] errors, float[,] nextLayerWeights)
         {
@@ -101,7 +102,7 @@ public class NeuralNetwork : MonoBehaviour
                 for (int outIter = 0; outIter < numOutputs; outIter++)
                 {
                     float slope = dActivationFunc(preOutputs[outIter]);
-                    feedback[outIter] = slope * errors[outIter];
+                    feedback[outIter] += slope * errors[outIter];
                 }
             }
             else
@@ -116,7 +117,7 @@ public class NeuralNetwork : MonoBehaviour
                     {
                         weightedError += errors[nextIter] * nextLayerWeights[nextIter, outIter];
                     }
-                    feedback[outIter] = slope * weightedError;
+                    feedback[outIter] += slope * weightedError;
                 }
             }
         }
