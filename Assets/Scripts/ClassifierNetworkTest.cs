@@ -98,6 +98,7 @@ public class ClassifierNetworkTest : MonoBehaviour
     {
         return (p.x * (p.x - 1f) - p.y * (0.333f * p.y + 0.2f)) > 0f ? 1f : 0f;
     }
+    
     private static float SinePatchesFunc(Vector2 p)
     {
         return Mathf.Sin(3f * p.x) * Mathf.Sin(2f * p.y) > 0.2f ? 1f : 0f;

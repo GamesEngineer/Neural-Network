@@ -150,6 +150,8 @@ public class NeuralNetwork : MonoBehaviour
         }
     }
 
+    #region Network Configuration & Tuning Parameters
+    
     [Serializable]
     public struct LayerInfo
     {
@@ -157,8 +159,16 @@ public class NeuralNetwork : MonoBehaviour
         public Neuron.ActivationType activationType;
     }
 
-    public List<LayerInfo> layersInfo = new List<LayerInfo>();
-    public List<Layer> layers = new List<Layer>();
+    [SerializeField]
+    protected List<LayerInfo> configuration = new List<LayerInfo>();
+
+    [SerializeField, Range(0.0001f, 0.01f)]
+    protected float learningRate = 0.001f;
+
+    #endregion
+
+    #region Properties
+
     public Layer InputLayer => layers[0];
     public Layer OutputLayer => layers[layers.Count - 1];
     public float[] SensoryInputs { get; private set; }
@@ -166,21 +176,29 @@ public class NeuralNetwork : MonoBehaviour
     public float[] Results { get; private set; }
     public float[] Errors { get; private set; }
     public float Loss { get; private set; }
-    [Range(0.0001f, 0.01f)] public float learningRate = 0.001f;
 
+    #endregion
+
+    private List<Layer> layers;
+
+    /// <summary>
+    /// Creates the neural network from the serialized configuration and the
+    /// specified number of inputs. The network's weights and biases are
+    /// initialized with random values.
+    /// </summary>
+    /// <param name="numInputs">Count of SensoryInputs values</param>
     public void Initialize(int numInputs)
     {
         SensoryInputs = new float[numInputs];
 
         // Create the layers and connect them to each other
-        layers = new List<Layer>(layersInfo.Count);
+        layers = new List<Layer>(configuration.Count);
         float[] inputs = SensoryInputs;
-        for (int i = 0; i < layersInfo.Count; i++)
+        foreach (var layerInfo in configuration)
         {
-            var l = layersInfo[i];
-            var layer = new Layer(inputs, l.neuronCount, l.activationType);
+            var layer = new Layer(inputs, layerInfo.neuronCount, layerInfo.activationType);
             layers.Add(layer);
-            // For the next layer
+            // Connect this layer's outputs to the next layer's inputs
             inputs = layer.outputs;
         }
 
@@ -189,19 +207,28 @@ public class NeuralNetwork : MonoBehaviour
         Errors = new float[Results.Length];
     }
 
+    /// <summary>
+    /// Feeds the SensoryInputs forward through the network.
+    /// This generates a prediction that is stored in the Results.
+    /// </summary>
     public void Think()
     {
-        // Feed the sensory inputs forward through the network
-        foreach (var l in layers)
+        foreach (var layer in layers)
         {
-            l.Activate();
+            layer.Activate();
         }
     }
 
+    /// <summary>
+    /// Attempts to learn the association between the current SensoryInputs
+    /// with the current Targets. This will update the Loss value as a metric
+    /// that can be used to know how well the network predicted the Targets.
+    /// </summary>
+    /// <param name="learningRateMultiplier">Used to adjust the learning rate each epoch.</param>
     public void Learn(float learningRateMultiplier = 1f)
     {
         Think();
-        Loss = CalculateLoss(Targets, Results, Errors);
+        Loss = CalculateLoss_MSE(Targets, Results, Errors);
 
         // Propagate errors backward through the network
         float[] feedback = Errors;
@@ -221,18 +248,25 @@ public class NeuralNetwork : MonoBehaviour
         }
     }
 
-    private static float CalculateLoss(float[] targets, float[] outputs, float[] errors)
+    /// <summary>
+    /// Calculates "loss" as the mean squared error between targets and predictions.
+    /// </summary>
+    /// <param name="targets">The expected values</param>
+    /// <param name="predictions">The predicted values</param>
+    /// <param name="errors">twice the difference between targets and predictions</param>
+    /// <returns>the total loss value (sum of squared errors)</returns>
+    public static float CalculateLoss_MSE(float[] targets, float[] predictions, float[] errors)
     {
-        Assert.IsTrue(targets.Length == outputs.Length);
-        Assert.IsTrue(errors.Length == outputs.Length);
+        Assert.IsTrue(targets.Length == predictions.Length);
+        Assert.IsTrue(errors.Length == predictions.Length);
         float loss = 0f;
-        for (int i = 0; i < outputs.Length; i++)
+        for (int i = 0; i < predictions.Length; i++)
         {
             // squared error
-            float error = targets[i] - outputs[i];
+            float error = targets[i] - predictions[i];
             loss += error * error;
             errors[i] = 2f * error; // derivative of (error)^2 is 2*error
         }
-        return loss / outputs.Length;
+        return loss / predictions.Length;
     }
 }

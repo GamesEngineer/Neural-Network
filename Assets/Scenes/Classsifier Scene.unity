@@ -629,7 +629,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c935dcaf57ed5f04b8db3eb7c94d0537, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layersInfo:
+  configuration:
   - neuronCount: 16
     activationType: 0
   - neuronCount: 16
@@ -637,7 +637,6 @@ MonoBehaviour:
   - neuronCount: 1
     activationType: 1
   learningRate: 0.01
-  numSamplesPerBatch: 1
 --- !u!4 &845530011
 Transform:
   m_ObjectHideFlags: 0
