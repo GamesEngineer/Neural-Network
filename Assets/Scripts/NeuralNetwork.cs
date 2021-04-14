@@ -39,8 +39,7 @@ public class NeuralNetwork : MonoBehaviour
             {
                 for (int inIndex = 0; inIndex < numInputs; inIndex++)
                 {
-                    float r = UnityEngine.Random.Range(-0.5f, 0.5f);
-                    weights[outIndex, inIndex] = r;
+                    weights[outIndex, inIndex] = UnityEngine.Random.Range(-0.5f, 0.5f);
                 }
             }
         }
@@ -162,8 +161,8 @@ public class NeuralNetwork : MonoBehaviour
     [SerializeField]
     protected List<LayerInfo> configuration = new List<LayerInfo>();
 
-    [SerializeField, Range(0.0001f, 0.01f)]
-    protected float learningRate = 0.001f;
+    [SerializeField, Range(0.0001f, 0.1f)]
+    protected float learningRate = 0.01f;
 
     #endregion
 

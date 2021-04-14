@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class ClassifierNetworkTest : MonoBehaviour
 {
+    public enum TestFunction { Linear, Elipse, Hyperbola, SinePatches }
     public TestFunction function;
     public List<Vector2> points = new List<Vector2>();
     public RawImage domainImage;
@@ -21,7 +22,6 @@ public class ClassifierNetworkTest : MonoBehaviour
     private float meanLoss;
     private Func<Vector2, float> testFunction;
 
-    public enum TestFunction { Linear, Elipse, Hyperbola, SinePatches }
     private static readonly Func<Vector2, float>[] testFunctions = { LinearFunc, ElipseFunc, HyperbolaFunc, SinePatchesFunc };
 
     private void Awake()
@@ -45,7 +45,7 @@ public class ClassifierNetworkTest : MonoBehaviour
         testFunction = testFunctions[(int)function];
     }
 
-    void Start()
+    private void Start()
     {
         int seed = (int)DateTime.Now.Ticks;
         UnityEngine.Random.InitState(seed);
