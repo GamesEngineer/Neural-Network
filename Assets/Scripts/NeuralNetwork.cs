@@ -170,10 +170,41 @@ public class NeuralNetwork : MonoBehaviour
 
     public Layer InputLayer => layers[0];
     public Layer OutputLayer => layers[layers.Count - 1];
+    
+    /// <summary>
+    /// The values in this array are the inputs to the entire neural network.
+    /// The size of this array does NOT have to match the number of neurons in
+    /// the input layer, because EACH sensory input will be connected to EACH
+    /// neuron in the first layer (a.k.a. the InputLayer).
+    /// </summary>
     public float[] SensoryInputs { get; private set; }
+    
+    /// <summary>
+    /// Before calling Learn, set these to the expected values for the
+    /// current SensoryInputs.
+    /// Initialize must be called before using this property.
+    /// </summary>
     public float[] Targets { get; private set; }
+    
+    /// <summary>
+    /// The values in this array are the results of the neural network's
+    /// prediction after calling Think.
+    /// Initialize must be called before using this property.
+    /// </summary>
     public float[] Results { get; private set; }
+    
+    /// <summary>
+    /// The values in this array are the difference between the Targets and
+    /// the Results of the neural network's prediction after calling Think.
+    /// Initialize must be called before using this property.
+    /// </summary>
     public float[] Errors { get; private set; }
+
+    /// <summary>
+    /// This is a metric of how much error the neural network has when making
+    /// predictions with its Think method. As the network is trained, this
+    /// metric should generally decrease towards zero.
+    /// </summary>
     public float Loss { get; private set; }
 
     #endregion
