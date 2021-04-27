@@ -7,6 +7,7 @@ public class ClassifierNetworkTest : MonoBehaviour
 {
     public enum TestFunction { Linear, Elipse, Hyperbola, SinePatches }
     public TestFunction function;
+
     public List<Vector2> points = new List<Vector2>();
     public RawImage domainImage;
     public RawImage lossGraph;
@@ -109,7 +110,8 @@ public class ClassifierNetworkTest : MonoBehaviour
         brain.Targets[0] = testFunction(p);
         brain.SensoryInputs[0] = p.x;
         brain.SensoryInputs[1] = p.y;
-        brain.Learn((float)(numTrainingEpochs - trainingEpoch) / (float)numTrainingEpochs);
+        float learningRateMultiplier = (float)(numTrainingEpochs - trainingEpoch) / (float)numTrainingEpochs;
+        brain.Learn(learningRateMultiplier);
     }
 
     private void ProcessEpoch()
@@ -169,12 +171,6 @@ public class ClassifierNetworkTest : MonoBehaviour
     {
         if (trainingEpoch > numTrainingEpochs) return;
         int x = Mathf.FloorToInt(graphTexture.width * (float)(trainingEpoch-1) / (float)numTrainingEpochs);
-        for (int h = 0; h < graphTexture.height; h++)
-        {
-            var c = graphTexture.GetPixel(x, h);
-            c.a = 1f;
-            graphTexture.SetPixel(x, h, c);
-        }
         int y = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Clamp01(maxLoss)) * (graphTexture.height - 1));
         graphTexture.SetPixel(x, y, new Color(1f, 0.5f, 0f));
         y = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Clamp01(meanLoss)) * (graphTexture.height - 1));
