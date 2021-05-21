@@ -61,6 +61,8 @@ public class ClassifierNetworkTest : MonoBehaviour
             Reset();
         }
 
+        UpdateDomainControls();
+
         if (trainingEpoch++ <= numTrainingEpochs)
         {
             ProcessEpoch();
@@ -84,6 +86,39 @@ public class ClassifierNetworkTest : MonoBehaviour
         domainTexture.SetPixels32(new Color32[domainTexture.width * domainTexture.height]);
         graphTexture.SetPixels32(new Color32[graphTexture.width * graphTexture.height]);
     }
+
+    #region Domain Control
+
+    private float domainSize = 4f;
+    private Vector2 domainOffset;
+
+    private void ResetDomain()
+    {
+        domainSize = 4f;
+        domainOffset = Vector2.zero;
+    }
+    
+    private void UpdateDomainControls()
+    {
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            ResetDomain();
+        }
+
+        if (Input.GetMouseButton(1))
+        {
+            domainOffset += (Input.GetAxis("Mouse X") * Vector2.right + Input.GetAxis("Mouse Y") * Vector2.up) * domainSize / domainTexture.width;
+        }
+
+        if (Input.GetMouseButtonDown(2))
+        {
+            quantizePredictionsToggle.isOn = !quantizePredictionsToggle.isOn;
+        }
+
+        domainSize += Input.mouseScrollDelta.y * -0.1f * domainSize;
+    }
+
+    #endregion
 
     private static float LinearFunc(Vector2 p)
     {
@@ -134,12 +169,12 @@ public class ClassifierNetworkTest : MonoBehaviour
 
     private void DrawPredictions()
     {
-        for (int h = 0; h < domainTexture.height; h++)
+        for (int y = 0; y < domainTexture.height; y++)
         {
-            for (int w = 0; w < domainTexture.width; w++)
+            for (int x = 0; x < domainTexture.width; x++)
             {
-                brain.SensoryInputs[0] = ((float)w / (float)domainTexture.width) * 4f - 2f;
-                brain.SensoryInputs[1] = ((float)h / (float)domainTexture.height) * 4f - 2f;
+                brain.SensoryInputs[0] = ((float)x / (float)domainTexture.width) * domainSize - domainSize / 2f - domainOffset.x;
+                brain.SensoryInputs[1] = ((float)y / (float)domainTexture.height) * domainSize - domainSize / 2f - domainOffset.y;
                 brain.Think();
                 Color c;
                 if (quantizePredictionsToggle.isOn)
@@ -150,7 +185,7 @@ public class ClassifierNetworkTest : MonoBehaviour
                 {
                     c = Color.Lerp(Color.cyan, Color.yellow, brain.Results[0]);
                 }
-                domainTexture.SetPixel(w, h, c);
+                domainTexture.SetPixel(x, y, c);
             }
         }
     }
@@ -160,8 +195,8 @@ public class ClassifierNetworkTest : MonoBehaviour
         for (int i = 0; i < points.Count; i++)
         {
             var p = points[i];
-            int x = Mathf.FloorToInt((p.x + 2f) * (float)domainTexture.width / 4f);
-            int y = Mathf.FloorToInt((p.y + 2f) * (float)domainTexture.height / 4f);
+            int x = Mathf.FloorToInt((p.x + domainSize/2f + domainOffset.x) * (float)domainTexture.width / domainSize);
+            int y = Mathf.FloorToInt((p.y + domainSize/2f + domainOffset.y) * (float)domainTexture.height / domainSize);
             if (x < 0 || x >= domainTexture.width || y < 0 || y >= domainTexture.height) continue;
             domainTexture.SetPixel(x, y, Color.Lerp(Color.blue, Color.red, testFunction(p)));
         }

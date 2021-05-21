@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -150,26 +150,12 @@ public class NeuralNetwork : MonoBehaviour
     }
 
     #region Network Configuration & Tuning Parameters
-    
+
     [Serializable]
     public struct LayerInfo
     {
-        public int neuronCount; // per channel; when <= 0, use CalculateOutputSize
+        public int neuronCount;
         public Neuron.ActivationType activationType;
-
-        public int channelCount;
-        public int kernelSize; // 1,3,5
-        public int stride;
-        public bool padding;
-
-        public int CalculateOutputSize(int numInputsAlongDimension)
-        {
-            if (padding)
-            {
-                numInputsAlongDimension += 2;
-            }
-            return ((numInputsAlongDimension - kernelSize) / stride) + 1;
-        }
     }
 
     [SerializeField]

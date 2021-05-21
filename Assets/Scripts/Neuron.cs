@@ -9,10 +9,12 @@ public static class Neuron
         Sigmoid,
         ReLU,
         ELU,
+
+        MaxPool,
     }
 
-    public static Func<float, float>[] ActivationFunctions = { Tanh, Sigmoid, ReLU, ELU };
-    public static Func<float, float>[] ActivationDerivatives = { dTanh, dSigmoid, dReLU, dELU };
+    public static Func<float, float>[] ActivationFunctions = { Tanh, Sigmoid, ReLU, ELU, null };
+    public static Func<float, float>[] ActivationDerivatives = { dTanh, dSigmoid, dReLU, dELU, null };
 
     // Range: [-1..+1]
     private static float Tanh(float x)
