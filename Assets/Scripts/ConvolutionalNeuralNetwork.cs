@@ -9,7 +9,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     public interface ILayer
     {
         ILayer InLayer { get; }
-        ILayer OutLayer { get; }
+        ILayer OutLayer { get; set; }
         int Width { get; }
         int Height { get; }
         int Depth { get; }
@@ -41,12 +41,8 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         }
 
         public ILayer CreateLayer(ILayer inLayer)
-#if true
         {
-            throw new NotImplementedException();
-        }
-#else
-        {
+            // TODO - Thursday Pro.Code
             ILayer layer;
             if (activationType == Neuron.ActivationType.MaxPool)
             {
@@ -58,7 +54,6 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
             }
             return layer;
         }
-#endif
     }
 
     [SerializeField]
@@ -74,7 +69,6 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         public readonly LayerInfo config;
 
         private readonly ILayer input;
-        private readonly ILayer output;
         private readonly float[,,] signals; // pre-activation value of neurons
         private readonly float[,,] activations; // activated neuron outputs
         private readonly float[,,,] kernels; // convolution kernels [outZ, inZ, kernelY, kernelX] (x,y) are constrained to kernel size
@@ -87,7 +81,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         private readonly int depth;
 
         public ILayer InLayer => input;
-        public ILayer OutLayer => output;
+        public ILayer OutLayer { get; set; }
         public int Width => width;
         public int Height => height;
         public int Depth => depth;
@@ -103,6 +97,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
             this.config = config;
             this.input = input;
+            input.OutLayer = this;
 
             depth = config.channelCount;
             height = config.CalculateOutputSize(input.Height);
@@ -211,7 +206,6 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     {
         public readonly LayerInfo config;
         private readonly ILayer input;
-        private readonly ILayer output;
         private readonly float[,,] activations; // neuron outputs
         private readonly float[,,] feedback; // learning via back propagation
 
@@ -219,7 +213,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         public readonly int outputWidth;
         public readonly int outputHeight;
         public ILayer InLayer => input;
-        public ILayer OutLayer => output;
+        public ILayer OutLayer { get; set; }
         public int Width => outputWidth;
         public int Height => outputHeight;
         public int Depth => depth;
@@ -232,6 +226,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
             this.config = config;
             this.input = input;
+            input.OutLayer = this;
 
             depth = input.Outputs.GetLength(0);
 
@@ -331,7 +326,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     public class OutputLayer : ILayer
     {
         public ILayer InLayer => inLayer;
-        public ILayer OutLayer => null;
+        public ILayer OutLayer { get => null; set => throw new InvalidOperationException(); }
         public int Width => inLayer.Width;
         public int Height => inLayer.Height;
         public int Depth => inLayer.Depth;
@@ -345,6 +340,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         public OutputLayer(ILayer inLayer)
         {
             this.inLayer = inLayer;
+            inLayer.OutLayer = this;
             this.errors = new float[Depth, Width, Height];
             this.targets = new float[Depth, Width, Height];
         }
@@ -396,11 +392,13 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
     public void Think()
     {
+        if (InLayer == null) return;
         InLayer.Activate();
     }
 
     public void Learn(float learningRateMultiplier = 1f)
     {
+        if (InLayer == null || OutLayer == null) return;
         Think();
         Loss = OutLayer.CalculateLoss();
         OutLayer.BackPropagate();
