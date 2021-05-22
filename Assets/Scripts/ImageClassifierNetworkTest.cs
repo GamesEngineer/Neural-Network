@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 using TMPro;
 
@@ -78,7 +80,48 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
     private void LoadTrainingData()
     {
-        throw new NotImplementedException();
+        const string trainingImagesFileName = @"Assets/train-images-idx3-ubyte/train-images.idx3-ubyte";
+        if (File.Exists(trainingImagesFileName))
+        {
+            using (FileStream stream = File.Open(trainingImagesFileName, FileMode.Open))
+            {
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    int magic = ReadIntBigEndian(reader);
+                    int numImages = ReadIntBigEndian(reader);
+                    numImages = numImages > 500 ? 500 : numImages; // HACK - limit set to the first 500 images
+                    int numRows = ReadIntBigEndian(reader);
+                    int numColumns = ReadIntBigEndian(reader);
+                    Debug.Log($"{magic}: {numImages} x {numRows} x {numColumns}");
+                    Assert.IsTrue(magic == 2051);
+                    for (int i = 0; i < numImages; i++)
+                    {
+                        Texture2D texture = new Texture2D(numColumns, numRows, TextureFormat.RGB24, false);
+                        trainingData.Add(texture);
+                        for (int row = numRows - 1; row >= 0; row--)
+                        {
+                            for (int col = 0; col < numColumns; col++)
+                            {
+                                byte p = reader.ReadByte();
+                                Color32 c = new Color32(p, p, p, 255);
+                                texture.SetPixel(col, row, c);
+                            }
+                        }
+                        texture.Apply();
+                    }
+                }
+            }
+        }
+    }
+
+    private int ReadIntBigEndian(BinaryReader reader)
+    {
+        byte[] data = reader.ReadBytes(4);
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(data);
+        }
+        return BitConverter.ToInt32(data, 0);
     }
 
     private void LearnTrainingData()
@@ -109,9 +152,10 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         subjectTexture.SetPixels32(new Color32[subjectTexture.width * subjectTexture.height]);
 
         // TODO - pick a random image from the training set
-        //{
-            //Graphics.CopyTexture(t, subjectImage.texture);
-        //}
+        {
+            int r = UnityEngine.Random.Range(0, 100);
+            Graphics.CopyTexture(trainingData[r], subjectImage.texture);
+        }
 
         subjectTexture.Apply();
 
