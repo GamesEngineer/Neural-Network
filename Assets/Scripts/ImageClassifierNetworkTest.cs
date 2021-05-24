@@ -10,13 +10,15 @@ using TMPro;
 public class ImageClassifierNetworkTest : MonoBehaviour
 {
     public RawImage subjectImage;
+    public TextMeshProUGUI labelText;
     public TextMeshProUGUI resultText;
     public int numEpochs = 1000;
 
     private ConvolutionalNeuralNetwork brain;
     private Texture2D subjectTexture;
 
-    private readonly List<Texture2D> trainingData = new List<Texture2D>();
+    private readonly List<Texture2D> trainingImages = new List<Texture2D>();
+    private readonly List<byte> trainingLabels = new List<byte>();
 
     private void Awake()
     {
@@ -36,9 +38,6 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         UnityEngine.Random.InitState(seed);
 
         LoadTrainingData();
-
-        LearnTrainingData();
-
         Reset();
     }
 
@@ -81,6 +80,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     private void LoadTrainingData()
     {
         const string trainingImagesFileName = @"Assets/train-images-idx3-ubyte/train-images.idx3-ubyte";
+        const int MAX_TRAINING_IMAGES = 500;
         if (File.Exists(trainingImagesFileName))
         {
             using (FileStream stream = File.Open(trainingImagesFileName, FileMode.Open))
@@ -89,7 +89,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 {
                     int magic = ReadIntBigEndian(reader);
                     int numImages = ReadIntBigEndian(reader);
-                    numImages = numImages > 500 ? 500 : numImages; // HACK - limit set to the first 500 images
+                    numImages = numImages > MAX_TRAINING_IMAGES ? MAX_TRAINING_IMAGES : numImages;
                     int numRows = ReadIntBigEndian(reader);
                     int numColumns = ReadIntBigEndian(reader);
                     Debug.Log($"{magic}: {numImages} x {numRows} x {numColumns}");
@@ -97,7 +97,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                     for (int i = 0; i < numImages; i++)
                     {
                         Texture2D texture = new Texture2D(numColumns, numRows, TextureFormat.RGB24, false);
-                        trainingData.Add(texture);
+                        trainingImages.Add(texture);
                         for (int row = numRows - 1; row >= 0; row--)
                         {
                             for (int col = 0; col < numColumns; col++)
@@ -108,6 +108,26 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                             }
                         }
                         texture.Apply();
+                    }
+                }
+            }
+        }
+
+        const string trainingLabelsFileName = @"Assets/train-labels-idx1-ubyte/train-labels.idx1-ubyte";
+        if (File.Exists(trainingLabelsFileName))
+        {
+            using (FileStream stream = File.Open(trainingLabelsFileName, FileMode.Open))
+            {
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    int magic = ReadIntBigEndian(reader);
+                    int numLabels = ReadIntBigEndian(reader);
+                    numLabels = numLabels > MAX_TRAINING_IMAGES ? MAX_TRAINING_IMAGES : numLabels;
+                    Debug.Log($"{magic}: {numLabels}");
+                    Assert.IsTrue(magic == 2049);
+                    for (int i = 0; i < numLabels; i++)
+                    {
+                        trainingLabels.Add(reader.ReadByte());
                     }
                 }
             }
@@ -126,7 +146,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
     private void LearnTrainingData()
     {
-        int[] shuffledIndices = new int[trainingData.Count];
+        int[] shuffledIndices = new int[trainingImages.Count];
         for (int i = 0; i < shuffledIndices.Length; i++)
         {
             shuffledIndices[i] = i;
@@ -139,9 +159,20 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             for (int j = 0; j < shuffledIndices.Length; j++)
             {
                 int shuffledIndex = shuffledIndices[j];
-                var t = trainingData[shuffledIndex];
-                Graphics.CopyTexture(t, subjectImage.texture);
+                var t = trainingImages[shuffledIndex];
+                //Graphics.CopyTexture(t, subjectImage.texture);
                 float learningRateMultiplier = (float)(numEpochs - epoch) / (float)numEpochs;
+                for (int y = 0; y < t.height; y++)
+                {
+                    for (int x = 0; x < t.width; x++)
+                    {
+                        brain.InLayer.Outputs[0, y, x] = t.GetPixel(x, y).r;
+                    }
+                }
+                for (int label = 0; label < 10; label++)
+                {
+                    brain.OutLayer.Targets[label,0,0] = trainingLabels[shuffledIndex] == label ? 1f : 0f;
+                }
                 brain.Learn(learningRateMultiplier);
             }
         }
@@ -151,15 +182,16 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     {
         subjectTexture.SetPixels32(new Color32[subjectTexture.width * subjectTexture.height]);
 
-        // TODO - pick a random image from the training set
-        {
-            int r = UnityEngine.Random.Range(0, 100);
-            Graphics.CopyTexture(trainingData[r], subjectImage.texture);
-        }
+        // Pick a random image from the training set
+        int r = UnityEngine.Random.Range(0, 100);
+        Graphics.CopyTexture(trainingImages[r], subjectImage.texture);
+        labelText.text = trainingLabels[r].ToString();
 
         subjectTexture.Apply();
 
         brain.Initialize(subjectTexture.width, subjectTexture.height, depth: 1);
+
+        LearnTrainingData();
     }
 
     private static void Shuffle<T>(T[] a)

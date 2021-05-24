@@ -182,12 +182,12 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                         {
                             for (int kernelY = 0; kernelY < config.kernelSize; kernelY++)
                             {
-                                int inY = Mathf.FloorToInt(outY * config.stride + kernelY - kernelExtents);
+                                int inY = Mathf.CeilToInt(outY * config.stride + kernelY - kernelExtents);
                                 if (inY < 0 || inY >= input.Height) continue;
 
                                 for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
                                 {
-                                    int inX = Mathf.FloorToInt(outX * config.stride + kernelX - kernelExtents);
+                                    int inX = Mathf.CeilToInt(outX * config.stride + kernelX - kernelExtents);
                                     if (inX < 0 || inX >= input.Width) continue;
 
                                     kernels[outZ, inZ, kernelY, kernelX] += change * input.Outputs[inZ, inY, inX];
@@ -281,12 +281,12 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
             for (int kernelY = 0; kernelY < config.kernelSize; kernelY++)
             {
-                int inY = Mathf.FloorToInt(outY * config.stride + kernelY - kernelExtents);
+                int inY = Mathf.CeilToInt(outY * config.stride + kernelY - kernelExtents);
                 if (inY < 0 || inY >= input.Height) continue;
 
                 for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
                 {
-                    int inX = Mathf.FloorToInt(outX * config.stride + kernelX - kernelExtents);
+                    int inX = Mathf.CeilToInt(outX * config.stride + kernelX - kernelExtents);
                     if (inX < 0 || inX >= input.Width) continue;
 
                     float activation = input.Outputs[z, inY, inX];
@@ -437,12 +437,12 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         {
             for (int kernelY = 0; kernelY < kernelSize; kernelY++)
             {
-                int y = Mathf.FloorToInt(row * stride + kernelY - kernelExtents);
+                int y = Mathf.CeilToInt(row * stride + kernelY - kernelExtents);
                 if (y < 0 || y >= height) continue;
 
                 for (int kernelX = 0; kernelX < kernelSize; kernelX++)
                 {
-                    int x = Mathf.FloorToInt(column * stride + kernelX - kernelExtents);
+                    int x = Mathf.CeilToInt(column * stride + kernelX - kernelExtents);
                     if (x < 0 || x >= width) continue;
 
                     float i = tensor[z, y, x];
@@ -482,7 +482,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         {
             for (int n = 0; n < kernelSize; n++)
             {
-                int y = Mathf.FloorToInt(row * stride + n - kernelExtents);
+                int y = Mathf.CeilToInt(row * stride + n - kernelExtents);
                 if (y < 0 || y >= height) continue;
 
                 // Convolution is the same as a cross-correlation with a kernel that is rotated 180°
@@ -490,7 +490,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
                 for (int m = 0; m < kernelSize; m++)
                 {
-                    int x = Mathf.FloorToInt(column * stride + m - kernelExtents);
+                    int x = Mathf.CeilToInt(column * stride + m - kernelExtents);
                     if (x < 0 || x >= width) continue;
                     
                     int kernelX = kernelSize - m - 1;
