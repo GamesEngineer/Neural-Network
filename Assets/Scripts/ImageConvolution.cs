@@ -11,11 +11,9 @@ public class ImageConvolution : MonoBehaviour
     private Texture2D convolvedTexture;
     private readonly float[,] kernel = new float[3, 3];
 
-    #region Ignore
     public TMP_Dropdown filterSelector;
     public Image kernelPanel;
     private readonly TextMeshProUGUI[,] kernelText = new TextMeshProUGUI[3,3];
-    #endregion
 
     void Start()
     {
@@ -45,7 +43,8 @@ public class ImageConvolution : MonoBehaviour
         {
             for (int a = 0; a < 3; a++)
             {
-                kernel[b, a] = filters[filterSelector.value, b, a];
+                int filterIndex = filterSelector.value;
+                kernel[b, a] = filters[filterIndex, b, a];
                 kernelText[b, a].text = kernel[b, a].ToString();
             }
         }
@@ -122,7 +121,7 @@ public class ImageConvolution : MonoBehaviour
             { -2f,  0f,  2f },
             { -1f,  0f,  1f },
         },
-        { // Custom
+        { // Custom - Outline2
             { 1f, 1f, 1f },
             { 1f, -8f, 1f },
             { 1f, 1f, 1f },

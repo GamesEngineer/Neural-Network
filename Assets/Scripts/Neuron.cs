@@ -5,16 +5,16 @@ public static class Neuron
 {
     public enum ActivationType
     {
+        None,
         Tanh,
         Sigmoid,
         ReLU,
         ELU,
-
         MaxPool,
     }
 
-    public static Func<float, float>[] ActivationFunctions = { Tanh, Sigmoid, ReLU, ELU, null };
-    public static Func<float, float>[] ActivationDerivatives = { dTanh, dSigmoid, dReLU, dELU, null };
+    public static Func<float, float>[] ActivationFunctions = { null, Tanh, Sigmoid, ReLU, ELU, null };
+    public static Func<float, float>[] ActivationDerivatives = { null, dTanh, dSigmoid, dReLU, dELU, null };
 
     // Range: [-1..+1]
     private static float Tanh(float x)

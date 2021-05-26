@@ -631,11 +631,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configuration:
   - neuronCount: 16
-    activationType: 0
-  - neuronCount: 16
-    activationType: 0
-  - neuronCount: 1
     activationType: 1
+  - neuronCount: 16
+    activationType: 1
+  - neuronCount: 1
+    activationType: 2
   learningRate: 0.01
 --- !u!4 &845530011
 Transform:
