@@ -132,6 +132,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                         }
                     }
                 }
+                biases[outZ] = UnityEngine.Random.Range(-0.1f, 0.1f);
             }
         }
 
@@ -262,11 +263,11 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                     {
                         for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
                         {
-                            kernels[outZ, inZ, kernelY, kernelX] = UnityEngine.Random.Range(-1f, 1f) * invNumKernelValues;
+                            kernels[outZ, inZ, kernelY, kernelX] = UnityEngine.Random.Range(-0.5f, 0.5f) * invNumKernelValues;
                         }
                     }
                 }
-                //biases[outZ] = UnityEngine.Random.Range(-0.01f, 0.01f);
+                biases[outZ] = UnityEngine.Random.Range(-0.01f, 0.01f);
             }
         }
 
@@ -545,6 +546,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         }
 
         public void BackPropagate() => inLayer.BackPropagate();
+        
         public void UpdateWeightsAndBiases(float learningRate) { }
 
         public OutputLayer(ILayer inLayer, Neuron.ActivationType activation)
@@ -609,17 +611,31 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
     public OutputLayer OutLayer { get; private set; }
 
+    public int LayerCount { get; private set; }
+    public ILayer GetLayer(int index) 
+    {
+        ILayer layer = InLayer;
+        while (index-- > 0 && layer != null) 
+        {
+            layer = layer.OutLayer;
+        }
+        return layer;
+    }
+
     public float Loss { get; private set; }
 
     public void Initialize(int width, int height, int depth, Neuron.ActivationType outputActivation)
     {
         InLayer = new InputLayer(width, height, depth);
+        LayerCount++;
         ILayer previousLayer = InLayer;
         foreach (var layerInfo in configuration)
         {
             previousLayer = layerInfo.CreateLayer(previousLayer);
+            LayerCount++;
         }
         OutLayer = new OutputLayer(previousLayer, outputActivation);
+        LayerCount++;
 
 #if DEBUG
         for (ILayer l = InLayer; l != null; l = l.OutLayer)
@@ -742,5 +758,11 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         }
 
         return weightedSum;
+    }
+
+    public void ChangeConfiguration(List<LayerInfo> newConfig)
+    {
+        Assert.IsNull(InLayer, "Cannot change configuration after initialization");
+        configuration = newConfig;
     }
 }

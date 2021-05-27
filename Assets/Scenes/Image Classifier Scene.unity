@@ -188,32 +188,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   configuration:
-  - channelCount: 4
-    activationType: 3
-    kernelSize: 3
-    stride: 1
-  - channelCount: 4
-    activationType: 5
-    kernelSize: 2
-    stride: 2
   - channelCount: 8
-    activationType: 3
+    activationType: 2
     kernelSize: 3
     stride: 1
   - channelCount: 8
     activationType: 5
     kernelSize: 2
     stride: 2
-  - channelCount: 16
-    activationType: 3
+  - channelCount: 32
+    activationType: 2
     kernelSize: 3
     stride: 1
-  - channelCount: 16
+  - channelCount: 32
     activationType: 5
     kernelSize: 2
     stride: 2
-  - channelCount: 64
-    activationType: 1
+  - channelCount: 128
+    activationType: 2
     kernelSize: 0
     stride: 0
   - channelCount: 10
@@ -548,7 +540,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.31057292, g: 0.19215688, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
