@@ -1,5 +1,9 @@
 #define SHOW_IMAGES_WHILE_LOADING
 #define SHOW_IMAGES_WHILE_TRAINING
+
+//#define DEBUG_CONV_LAYER
+//#define DEBUG_MANUAL_TRAINING_STEPS
+
 using System;
 using System.IO;
 using System.Collections;
@@ -14,6 +18,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 {
     public RawImage subjectImage;
     public RawImage conv1_Image;
+    public RawImage conv1Kernel_Image;
     
     public TextMeshProUGUI labelText;
     
@@ -30,6 +35,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     private ConvolutionalNeuralNetwork brain;
     private Texture2D subjectTexture;
     private Texture2D conv1_Texture;
+    private Texture2D conv1Kernel_Texture;
     private float progressBarMaxWidth;
     private bool isPredictionStale;
     private readonly List<Texture2D> trainingImages = new List<Texture2D>();
@@ -42,7 +48,11 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
     private void Awake()
     {
+#if DEBUG_CONV_LAYER
+        brain = ConvolutionalNeuralNetwork.CreateOneLayerTest();
+#else
         brain = GetComponent<ConvolutionalNeuralNetwork>();
+#endif
 
         subjectTexture = new Texture2D(IMAGE_SIZE, IMAGE_SIZE, TextureFormat.RGB24, mipChain: false)
         {
@@ -57,6 +67,13 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             wrapMode = TextureWrapMode.Clamp
         };
         conv1_Image.texture = conv1_Texture;
+
+        conv1Kernel_Texture = new Texture2D(3, 3, TextureFormat.RGB24, mipChain: false)
+        {
+            filterMode = FilterMode.Point,
+            wrapMode = TextureWrapMode.Clamp
+        };
+        conv1Kernel_Image.texture = conv1Kernel_Texture;
 
         progressBarMaxWidth = progressBar.rectTransform.sizeDelta.x;
         progressBar.enabled = false;
@@ -110,19 +127,43 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
         if (brain.InLayer != null)
         {
-            ConvolutionalNeuralNetwork.ILayer conv1_Layer = brain.InLayer.OutLayer;
-            int z = (int)Time.time % conv1_Layer.Depth;
-            for (int y = 0; y < IMAGE_SIZE; y++)
-            {
-                for (int x = 0; x < IMAGE_SIZE; x++)
-                {
-                    float r = conv1_Layer.Outputs[z, y, x];
-                    Color c = new Color(r, r*r, -r, 1f);
-                    conv1_Texture.SetPixel(x, y, c);
-                }
-            }
-            conv1_Texture.Apply();
+            DrawConvLayerAndKernel();
         }
+    }
+
+    private int debugChannelIndex;
+    private void DrawConvLayerAndKernel()
+    {
+        ConvolutionalNeuralNetwork.ILayer conv1_Layer = brain.InLayer.OutLayer;
+
+        if (Input.GetKeyDown(KeyCode.RightArrow)) { debugChannelIndex += 1; }
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) { debugChannelIndex += conv1_Layer.Depth - 1; }
+        debugChannelIndex %= conv1_Layer.Depth;
+
+        for (int y = 0; y < conv1_Layer.Height; y++)
+        {
+            for (int x = 0; x < conv1_Layer.Width; x++)
+            {
+                float r = conv1_Layer.Outputs[debugChannelIndex, y, x];
+                Color c = new Color(r, 2f * r * r, -r, 1f);
+                conv1_Texture.SetPixel(x, y, c);
+            }
+        }
+        conv1_Texture.Apply();
+
+        for (int n = 0; n < 3; n++)
+        {
+            for (int m = 0; m < 3; m++)
+            {
+                float r = (conv1_Layer as ConvolutionalNeuralNetwork.ConvolutionLayer).GetKernelValue(0, debugChannelIndex, m, n);
+                Color c = new Color(r, 2f * r * r, -r, 1f);
+                conv1Kernel_Texture.SetPixel(m, n, c);
+            }
+        }
+        conv1Kernel_Texture.Apply();
+
+        conv1_Image.enabled = true;
+        conv1Kernel_Image.enabled = true;
     }
 
     private IEnumerator LoadTrainingData()
@@ -215,7 +256,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     {
         labelText.text = "TRAINING";
         progressBar.enabled = true;
-        brain.Initialize(IMAGE_SIZE, IMAGE_SIZE, depth: 1);
+        brain.Initialize(IMAGE_SIZE, IMAGE_SIZE, depth: 1, Neuron.ActivationType.SoftMax);
 
         int[] shuffledIndices = new int[trainingImages.Count];
         for (int i = 0; i < shuffledIndices.Length; i++)
@@ -241,8 +282,14 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 #if SHOW_IMAGES_WHILE_TRAINING
                 Graphics.CopyTexture(trainingImage, subjectTexture);
 #endif
+                DrawConvLayerAndKernel();
+#if DEBUG_MANUAL_TRAINING_STEPS
+                yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
+#else
                 yield return null;
+#endif
             }
+            Debug.Log($"Loss: {brain.Loss:F4}");
         }
 
         progressBar.enabled = false;
@@ -258,10 +305,20 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 brain.InLayer.signals[0, y, x] = image.GetPixel(x, y).r;
             }
         }
+#if DEBUG_CONV_LAYER
+        for (int y = 0; y < image.height; y++)
+        {
+            for (int x = 0; x < image.width; x++)
+            {
+                brain.OutLayer.Targets[0, y, x] = image.GetPixel(x, y).r;
+            }
+        }
+#else
         for (int n = 0; n < 10; n++)
         {
             brain.OutLayer.Targets[n, 0, 0] = label == n ? 1f : 0f;
         }
+#endif
         brain.Learn(learningRateMultiplier);
     }
 
@@ -271,7 +328,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
         // Select the "winning" output neuron, and use its index as the predicted label
         int winner = -1;
-        float winnerValue = 0.5f;
+        float winnerValue = -1f;
         System.Text.StringBuilder predictionsStr = new System.Text.StringBuilder("Predictions:");
         if (brain.OutLayer != null)
         {
