@@ -250,23 +250,31 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
             activationFunc = Neuron.ActivationFunctions[(int)config.activationType];
             dActivationFunc = Neuron.ActivationDerivatives[(int)config.activationType];
 
-            float invNumKernelValues = 1f / (config.kernelSize * config.kernelSize);
+            float normalizer = 1f / input.Depth;
+            float range = config.kernelSize * config.kernelSize;
 
-            // Initialize the kernel weights with random noise
+            // Initialize each channel's kernel weights with a pseudo-normal distribution,
+            // and set its bias to shift the result of a convolution toward zero.
             for (int outZ = 0; outZ < depth; outZ++)
             {
+                float mean = 0f;
                 for (int inZ = 0; inZ < input.Depth; inZ++)
                 {
                     for (int kernelY = 0; kernelY < config.kernelSize; kernelY++)
                     {
                         for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
                         {
-                            float r = UnityEngine.Random.Range(-0.5f, 0.5f) * invNumKernelValues;
+                            // Create a pseudo-normal distribution
+                            float r = UnityEngine.Random.Range(-range, +range);
+                            r += UnityEngine.Random.Range(-range, +range);
+                            r *= normalizer;
+                            mean += r;
                             kernels[outZ, inZ, kernelY, kernelX] = r;
                         }
                     }
                 }
-                //biases[outZ] = UnityEngine.Random.Range(-0.01f, 0.01f);
+                mean /= normalizer * range;
+                biases[outZ] = -mean;
             }
         }
 
@@ -347,6 +355,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         public float CalculateWeightedFeedback(int inZ, int inY, int inX) => Convolution(inX, inY, inZ, kernels, feedback, config.stride);
         
         public float GetKernelValue(int inZ, int kernelIndex, int kernelX, int kernelY) => kernels[kernelIndex, inZ, kernelY, kernelX];
+        public float GetBias(int kernelIndex) => biases[kernelIndex];
     }
 
     public class MaxPoolLayer : ILayer

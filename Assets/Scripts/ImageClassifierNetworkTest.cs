@@ -203,8 +203,9 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 for (int m = 0; m < 3; m++)
                 {
                     float r = convLayer.GetKernelValue(0, debugChannelIndex, m, n);
-                    r *= 0.25f; // scale down to help show range of kernel values
-                    Color c = new Color(r, 2f * r * r, -r, 1f);
+                    float b = convLayer.GetBias(debugChannelIndex);
+                    r *= 0.125f; // scale down to help show range of kernel values
+                    Color c = new Color(r, b * b, -r, 1f);
                     kernelTexture.SetPixel(m, 2 - n, c);
                 }
             }

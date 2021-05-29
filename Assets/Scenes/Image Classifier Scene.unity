@@ -207,14 +207,6 @@ MonoBehaviour:
     activationType: 5
     kernelSize: 2
     stride: 2
-  - channelCount: 64
-    activationType: 1
-    kernelSize: 3
-    stride: 1
-  - channelCount: 64
-    activationType: 5
-    kernelSize: 2
-    stride: 2
   - channelCount: 784
     activationType: 3
     kernelSize: 0
@@ -223,7 +215,7 @@ MonoBehaviour:
     activationType: 2
     kernelSize: 0
     stride: 0
-  learningRate: 0.001
+  learningRate: 0.01
 --- !u!1 &920900422
 GameObject:
   m_ObjectHideFlags: 0
