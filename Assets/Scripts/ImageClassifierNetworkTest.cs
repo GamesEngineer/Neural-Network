@@ -1,4 +1,4 @@
-//#define DEBUG_CONV_LAYER
+#define DEBUG_CONV_LAYER
 //#define DEBUG_POOL_LAYER
 using System;
 using System.IO;
@@ -158,7 +158,15 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     private void DrawLossGraph(int epoch, float meanLoss, float maxLoss)
     {
         if (epoch > numEpochs) return;
-        int x = Mathf.FloorToInt(graphTexture.width * (float)(epoch - 1) / (float)(numEpochs - 1));
+        int x;
+        if (numEpochs <= graphTexture.width)
+        {
+            x = epoch - 1;
+        }
+        else
+        {
+            x = Mathf.FloorToInt(graphTexture.width * (float)(epoch - 1) / (float)(numEpochs - 1));
+        }
         int y = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Clamp01(maxLoss)) * (graphTexture.height - 1));
         graphTexture.SetPixel(x, y, new Color(1f, 0.5f, 0f));
         y = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Clamp01(meanLoss)) * (graphTexture.height - 1));
@@ -198,15 +206,16 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         if (convLayer != null)
         {
             kernelTexture.SetPixels32(new Color32[kernelTexture.width * kernelTexture.height]);
-            for (int n = 0; n < 3; n++)
+            float normalizer = 1f / (convLayer.config.kernelSize * convLayer.config.kernelSize);
+            for (int n = 0; n < convLayer.config.kernelSize; n++)
             {
-                for (int m = 0; m < 3; m++)
+                for (int m = 0; m < convLayer.config.kernelSize; m++)
                 {
                     float r = convLayer.GetKernelValue(0, debugChannelIndex, m, n);
                     float b = convLayer.GetBias(debugChannelIndex);
-                    r *= 0.1f; // scale down to help show range of kernel values
+                    r *= normalizer; // scale down to help show range of kernel values
                     Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, b * b, -r, 1f);
-                    kernelTexture.SetPixel(m, 2 - n, c);
+                    kernelTexture.SetPixel(m, convLayer.config.kernelSize - 1 - n, c);
                 }
             }
             kernelTexture.Apply();
@@ -367,7 +376,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     {
         SetInputSignals(image);
         SetOutputTargets(label);
-        brain.Learn(learningRateMultiplier);
+        brain.Learn(learningRateMultiplier); // FIXME? - don't update weights and biases every image
     }
 
     private void SetInputSignals(Texture2D image)
@@ -471,8 +480,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             }
         }
 
-        Debug.Log(predictionsStr.ToString());
-        resultText.text = winner >= 0 ? winner.ToString() : "??";
+        resultText.text = winner >= 0 ? $"Guess: {winner}" : "??";
         isPredictionStale = false;
     }
 
@@ -483,7 +491,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
         // Pick a random item (image, label) from the training set
         int r = UnityEngine.Random.Range(0, trainingImages.Count);
-        labelText.text = $"LABEL: {trainingLabels[r]}";
+        labelText.text = $"Label: {trainingLabels[r]}";
         Graphics.CopyTexture(trainingImages[r], subjectTexture);
         subjectTexture.Apply();
         isPredictionStale = true;

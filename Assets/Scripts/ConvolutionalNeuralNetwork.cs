@@ -44,6 +44,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
         public ILayer CreateLayer(ILayer inLayer)
         {
+            // TODO - Tuesday Pro.Code
             // TODO - Thursday Pro.Code
             ILayer layer;
             if (activationType == Neuron.ActivationType.MaxPool)
@@ -70,6 +71,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
     #endregion
 
+    // TODO - Tuesday Pro.Code lesson June 08, 2021
     public class FlatLayer : ILayer
     {
         public readonly LayerInfo config;
@@ -204,6 +206,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         }
     }
 
+    // TODO - Thursday Pro.Code lesson June 3, 2021 (see BackPropagate)
     public class ConvolutionLayer : ILayer
     {
         public readonly LayerInfo config;
@@ -298,7 +301,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
             OutLayer.Activate();
         }
 
-        // TODO - Pro.Code lesson June 3, 2021
+        // TODO - Thursday Pro.Code lesson June 3, 2021
         public void BackPropagate()
         {
             for (int outZ = 0; outZ < depth; outZ++)
@@ -333,8 +336,8 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                     for (int outX = 0; outX < width; outX++)
                     {
                         float change = learningRate * feedback[outZ, outY, outX];
-                        biases[outZ] += change;
                         change /= config.kernelSize * config.kernelSize;
+                        biases[outZ] += change;
                         for (int inZ = 0; inZ < input.Depth; inZ++)
                         {
                             for (int n = 0; n < config.kernelSize; n++)
@@ -419,7 +422,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                 {
                     for (int outX = 0; outX < width; outX++)
                     {
-                        activations[outZ, outY, outX] = GetMaxInputInKernelWindow(kernelExtents, outZ, outY, outX);
+                        activations[outZ, outY, outX] = GetMaxInputInKernelWindow(outZ, outY, outX);
                     }
                 }
             }
@@ -452,10 +455,11 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
             OutLayer.UpdateWeightsAndBiases(learningRate);
         }
 
-        private float GetMaxInputInKernelWindow(float kernelExtents, int z, int outY, int outX)
+        private float GetMaxInputInKernelWindow(int outZ, int outY, int outX)
         {
-            maxInputCoords[z, outY, outX] = Vector2Int.zero;
-            float maxInput = 0f;
+            maxInputCoords[outZ, outY, outX] = Vector2Int.zero;
+            // TODO - FIXME - Should it be largest magnitude or maximum value?
+            float maxInput = 0f;// float.NegativeInfinity;
 
             for (int kernelY = 0; kernelY < config.kernelSize; kernelY++)
             {
@@ -467,11 +471,12 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                     int inX = outX * config.stride + kernelX;
                     if (inX < 0 || inX >= input.Width) continue;
 
-                    float activation = input.Outputs[z, inY, inX];
+                    float activation = input.Outputs[outZ, inY, inX];
                     if (Mathf.Abs(activation) > Mathf.Abs(maxInput))
+                    //if (activation > maxInput)
                     {
                         maxInput = activation;
-                        maxInputCoords[z, outY, outX] = new Vector2Int(inX, inY);
+                        maxInputCoords[outZ, outY, outX] = new Vector2Int(inX, inY);
                     }
                 }
             }
@@ -650,6 +655,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     public OutputLayer OutLayer { get; private set; }
 
     public int LayerCount { get; private set; }
+
     public ILayer GetLayer(int index) 
     {
         ILayer layer = InLayer;
@@ -723,7 +729,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     /// <param name="kernels">Array of kernel filters [kernelIndex, tensor depth, kernel size, kernel size]</param>
     /// <param name="tensor">Input tensor [depth, height, width] </param>
     /// <returns>The cross-correlation of tensor[...] * kernels[kernelIndex, ...]</returns>
-    public static float CrossCorrelation(int column, int row, int kernelIndex, float[,,,] kernels, float[,,] tensor, int stride = 1)
+    public static float CrossCorrelation(int column, int row, int kernelIndex, float[,,,] kernels, float[,,] tensor, int stride)
     {
         Assert.IsTrue(kernels.GetLength(1) == tensor.GetLength(0));
         Assert.IsTrue(kernels.GetLength(2) == kernels.GetLength(3));
@@ -733,7 +739,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         int width = tensor.GetLength(2);
 
         int kernelSize = kernels.GetLength(2);
-        float kernelExtents = kernelSize / 2f;
+        float offset = kernelSize / 2f;
 
         float weightedSum = 0f;
 
@@ -741,12 +747,12 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         {
             for (int kernelY = 0; kernelY < kernelSize; kernelY++)
             {
-                int y = Mathf.CeilToInt(row * stride + kernelY - kernelExtents);
+                int y = Mathf.CeilToInt(row * stride + kernelY - offset);
                 if (y < 0 || y >= height) continue;
 
                 for (int kernelX = 0; kernelX < kernelSize; kernelX++)
                 {
-                    int x = Mathf.CeilToInt(column * stride + kernelX - kernelExtents);
+                    int x = Mathf.CeilToInt(column * stride + kernelX - offset);
                     if (x < 0 || x >= width) continue;
 
                     float i = tensor[z, y, x];
@@ -775,7 +781,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     /// <param name="kernels">Array of kernel filters [kernelIndex, tensor depth, kernel size, kernel size]</param>
     /// <param name="tensor">Input tensor [depth, height, width] </param>
     /// <returns>The convolution of tensor[...] * kernels[kernelIndex,...]</returns>
-    public static float Convolution(int column, int row, int kernelIndex, float[,,,] kernels, float[,,] tensor, int stride = 1)
+    public static float Convolution(int column, int row, int kernelIndex, float[,,,] kernels, float[,,] tensor, int stride)
     {
         Assert.IsTrue(kernels.GetLength(0) == tensor.GetLength(0));
         Assert.IsTrue(kernels.GetLength(2) == kernels.GetLength(3));
@@ -785,7 +791,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         int width = tensor.GetLength(2);
 
         int kernelSize = kernels.GetLength(2);
-        float kernelExtents = kernelSize / 2f;
+        float offset = kernelSize / 2f;
 
         float weightedSum = 0f;
 
@@ -793,7 +799,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         {
             for (int n = 0; n < kernelSize; n++)
             {
-                int y = Mathf.CeilToInt(row * stride + n - kernelExtents);
+                int y = Mathf.CeilToInt(row * stride + n - offset);
                 if (y < 0 || y >= height) continue;
 
                 // Convolution is the same as a cross-correlation with a kernel that is rotated 180°
@@ -801,7 +807,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
 
                 for (int m = 0; m < kernelSize; m++)
                 {
-                    int x = Mathf.CeilToInt(column * stride + m - kernelExtents);
+                    int x = Mathf.CeilToInt(column * stride + m - offset);
                     if (x < 0 || x >= width) continue;
                     
                     int kernelX = kernelSize - m - 1;
