@@ -23,6 +23,7 @@ public static class Neuron
     // Range: [-1..+1]
     private static float Tanh(float x)
     {
+        x = Mathf.Clamp(x, -38f, 38f);
         float e2x = Mathf.Exp(2f * x);
         return (e2x - 1f) / (e2x + 1f);
     }
@@ -36,6 +37,7 @@ public static class Neuron
     // Range: [0..1]
     private static float Sigmoid(float x)
     {
+        x = Mathf.Clamp(x, -76f, 76f);
         return 1f / (1f + Mathf.Exp(-x));
     }
 

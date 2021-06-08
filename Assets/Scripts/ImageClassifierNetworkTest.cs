@@ -55,7 +55,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 new ConvolutionalNeuralNetwork.LayerInfo
                 {
                     channelCount = 1,
-                    activationType = Neuron.ActivationType.Tanh,
+                    activationType = Neuron.ActivationType.Sigmoid,
                     kernelSize = 3,
                     stride = 1,
                 },
@@ -188,7 +188,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             for (int x = 0; x < layer.Width; x++)
             {
                 float r = layer.Outputs[debugChannelIndex, y, x];
-                Color c = new Color(r, 2f * r * r, -r, 1f);
+                Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, 2f * r * r, -r, 1f);
                 layerTexture.SetPixel(x, layer.Height - 1 - y, c);
             }
         }
@@ -204,8 +204,8 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 {
                     float r = convLayer.GetKernelValue(0, debugChannelIndex, m, n);
                     float b = convLayer.GetBias(debugChannelIndex);
-                    r *= 0.125f; // scale down to help show range of kernel values
-                    Color c = new Color(r, b * b, -r, 1f);
+                    r *= 0.1f; // scale down to help show range of kernel values
+                    Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, b * b, -r, 1f);
                     kernelTexture.SetPixel(m, 2 - n, c);
                 }
             }
@@ -392,10 +392,16 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         Assert.IsTrue(brain.OutLayer.Width == brain.InLayer.Width);
         float[,] kernel = new float[3, 3]
         {
+#if true
             // Pseudo-emboss (using an asymetrical filter helps to find bugs)
-            { -1.50f, -1.10f, -0.50f },
-            { -1.40f, +1.00f, +0.25f },
-            { +0.00f, +1.25f, +2.00f },
+            { -3.00f, -2.20f, -1.00f },
+            { -2.80f, +2.00f, +0.50f },
+            { +0.00f, +2.50f, +4.00f },
+#else
+            { 9.0f, 0.0f, 0.0f },
+            { 0.0f, 0.0f, 0.0f },
+            { 0.0f, 0.0f, 0.0f },
+#endif
         };
         Func<float, float> activate = Neuron.ActivationFunctions[(int)brain.InLayer.OutLayer.Activation];
         for (int y = 0; y < brain.OutLayer.Height; y++)
