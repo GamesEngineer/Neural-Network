@@ -269,15 +269,15 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                         for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
                         {
                             // Create a pseudo-normal distribution
-                            float r = UnityEngine.Random.Range(-range, +range);
-                            r += UnityEngine.Random.Range(-range, +range);
+                            float r = UnityEngine.Random.Range(-range, +range) * 0.5f;
+                            r += UnityEngine.Random.Range(-range, +range) * 0.5f;
                             r *= normalizer;
                             mean += r;
                             kernels[outZ, inZ, kernelY, kernelX] = r;
                         }
                     }
                 }
-                mean /= normalizer * range;
+                mean /= input.Depth * config.kernelSize * config.kernelSize;
                 biases[outZ] = -mean;
             }
         }
