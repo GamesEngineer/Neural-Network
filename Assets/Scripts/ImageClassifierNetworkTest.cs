@@ -55,7 +55,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 new ConvolutionalNeuralNetwork.LayerInfo
                 {
                     channelCount = 1,
-                    activationType = Neuron.ActivationType.Sigmoid,
+                    activationType = Neuron.ActivationType.ReLU,
                     kernelSize = 3,
                     stride = 1,
                 },
