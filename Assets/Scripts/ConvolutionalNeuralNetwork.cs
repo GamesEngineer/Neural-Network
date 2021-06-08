@@ -333,8 +333,8 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                     for (int outX = 0; outX < width; outX++)
                     {
                         float change = learningRate * feedback[outZ, outY, outX];
-                        biases[outZ] += change;
                         change /= config.kernelSize * config.kernelSize;
+                        biases[outZ] += change;
                         for (int inZ = 0; inZ < input.Depth; inZ++)
                         {
                             for (int n = 0; n < config.kernelSize; n++)
