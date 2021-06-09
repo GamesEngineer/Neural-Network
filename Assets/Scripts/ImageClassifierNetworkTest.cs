@@ -1,4 +1,4 @@
-#define DEBUG_CONV_LAYER
+//#define DEBUG_CONV_LAYER
 //#define DEBUG_POOL_LAYER
 using System;
 using System.IO;
@@ -188,7 +188,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftArrow)) { debugChannelIndex += layer.Depth - 1; }
         debugChannelIndex %= layer.Depth;
 
-        layerName.text = $"[{debugLayerIndex}] {layer.GetType().Name}\nShape: {layer.Width}x{layer.Height}x{layer.Depth}\nChannel: {debugChannelIndex + 1}\nActivation: {layer.Activation}";
+        layerName.text = $"[{debugLayerIndex}] {layer.GetType().Name}\nShape: {layer.Width}x{layer.Height}x{layer.Depth}\nChannel: {debugChannelIndex}\nActivation: {layer.Activation}";
 
         layerTexture.SetPixels32(new Color32[layerTexture.width * layerTexture.height]);
         for (int y = 0; y < layer.Height; y++)

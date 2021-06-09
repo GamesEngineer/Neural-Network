@@ -191,24 +191,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   configuration:
-  - channelCount: 12
+  - channelCount: 8
     activationType: 3
     kernelSize: 3
     stride: 1
-  - channelCount: 12
+  - channelCount: 8
     activationType: 5
     kernelSize: 2
     stride: 2
-  - channelCount: 24
+  - channelCount: 16
     activationType: 3
     kernelSize: 3
     stride: 1
-  - channelCount: 24
+  - channelCount: 16
     activationType: 5
     kernelSize: 2
     stride: 2
   - channelCount: 128
-    activationType: 3
+    activationType: 1
     kernelSize: 0
     stride: 0
   - channelCount: 10
