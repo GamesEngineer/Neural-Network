@@ -191,6 +191,8 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                 // Clear the feedback so we don't use it again (useful for batch learning)
                 feedback[outZ, 0, 0] = 0f;
             }
+
+            OutLayer.UpdateWeightsAndBiases(learningRate);
         }
 
         public float CalculateWeightedFeedback(int inZ, int inY, int inX)

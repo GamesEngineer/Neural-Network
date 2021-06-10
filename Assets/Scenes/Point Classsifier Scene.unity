@@ -1696,6 +1696,7 @@ MonoBehaviour:
     kernelSize: 0
     stride: 0
   learningRate: 0.01
+  batchSize: 1
 --- !u!1 &851524951
 GameObject:
   m_ObjectHideFlags: 0

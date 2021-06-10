@@ -79,7 +79,7 @@ public class ClassifierNetworkTest : MonoBehaviour
     private void Reset()
     {
         shuffledPoints = points.ToArray();
-        brain.Initialize(1, 1, 2, Neuron.ActivationType.None);
+        brain.Initialize(1, 1, 2, Neuron.ActivationType.SoftMax);
         trainingEpoch = 0;
         maxLoss = 0f;
         meanLoss = 0f;
@@ -181,7 +181,7 @@ public class ClassifierNetworkTest : MonoBehaviour
                 Color c;
                 if (quantizePredictionsToggle.isOn)
                 {
-                    c = brain.OutLayer.WinnerIndex == 0 ? Color.yellow : Color.cyan;
+                    c = brain.OutLayer.WinnerIndex == 1 ? Color.yellow : Color.cyan;
                 }
                 else
                 {
