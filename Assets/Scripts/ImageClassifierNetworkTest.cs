@@ -230,6 +230,14 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         kernelImage.enabled = true;
     }
 
+    public float GetDebugLayerOutput(int x, int y)
+    {
+        ConvolutionalNeuralNetwork.ILayer layer = brain.GetLayer(debugLayerIndex);
+        if (layer == null) return 0f;
+        if (x < 0 || x >= layer.Width || y < 0 || y >= layer.Height) return 0f;
+        return layer.Outputs[debugChannelIndex, y, x];
+    }
+
     private IEnumerator LoadTrainingData()
     {
         labelText.text = "LOADING";
@@ -451,7 +459,8 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             }
         }
 #else
-        for (int n = 0; n < 10; n++)
+        float depth = brain.OutLayer.Targets.GetLength(0);
+        for (int n = 0; n < depth; n++)
         {
             brain.OutLayer.Targets[n, 0, 0] = label == n ? 1f : 0f;
         }

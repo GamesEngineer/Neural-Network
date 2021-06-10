@@ -610,6 +610,7 @@ GameObject:
   - component: {fileID: 845530011}
   - component: {fileID: 845530010}
   - component: {fileID: 845530012}
+  - component: {fileID: 845530013}
   m_Layer: 0
   m_Name: NeuralNetwork
   m_TagString: Untagged
@@ -1669,6 +1670,33 @@ MonoBehaviour:
   lossGraph: {fileID: 1636855294}
   quantizePredictionsToggle: {fileID: 110583397}
   numTrainingEpochs: 5000
+--- !u!114 &845530013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 845530009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36d84b447d6878642abd646ca7be1c22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  configuration:
+  - channelCount: 16
+    activationType: 3
+    kernelSize: 0
+    stride: 0
+  - channelCount: 16
+    activationType: 3
+    kernelSize: 0
+    stride: 0
+  - channelCount: 2
+    activationType: 3
+    kernelSize: 0
+    stride: 0
+  learningRate: 0.01
+  batchSize: 1
 --- !u!1 &851524951
 GameObject:
   m_ObjectHideFlags: 0
