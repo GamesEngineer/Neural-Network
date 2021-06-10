@@ -18,7 +18,7 @@ public class ClassifierNetworkTest : MonoBehaviour
     private Vector2[] shuffledPoints;
     private Texture2D domainTexture;
     private Texture2D graphTexture;
-    private NeuralNetwork brain;
+    private ConvolutionalNeuralNetwork brain;
     private float maxLoss;
     private float meanLoss;
     private Func<Vector2, float> testFunction;
@@ -27,7 +27,7 @@ public class ClassifierNetworkTest : MonoBehaviour
 
     private void Awake()
     {
-        brain = GetComponent<NeuralNetwork>();
+        brain = GetComponent<ConvolutionalNeuralNetwork>();
 
         domainTexture = new Texture2D(128, 128, TextureFormat.RGB24, mipChain: false)
         {
@@ -79,7 +79,7 @@ public class ClassifierNetworkTest : MonoBehaviour
     private void Reset()
     {
         shuffledPoints = points.ToArray();
-        brain.Initialize(numInputs: 2);
+        brain.Initialize(1, 1, 2, Neuron.ActivationType.None);
         trainingEpoch = 0;
         maxLoss = 0f;
         meanLoss = 0f;
@@ -142,9 +142,11 @@ public class ClassifierNetworkTest : MonoBehaviour
 
     private void LearnPoint(Vector2 p)
     {
-        brain.Targets[0] = testFunction(p);
-        brain.SensoryInputs[0] = p.x;
-        brain.SensoryInputs[1] = p.y;
+        float q = testFunction(p);
+        brain.OutLayer.Targets[0, 0, 0] = q;
+        brain.OutLayer.Targets[1, 0, 0] = 1 - q;
+        brain.InLayer.Outputs[0, 0, 0] = p.x;
+        brain.InLayer.Outputs[1, 0, 0] = p.y;
         float learningRateMultiplier = (float)(numTrainingEpochs - trainingEpoch) / (float)numTrainingEpochs;
         brain.Learn(learningRateMultiplier);
     }
@@ -173,17 +175,17 @@ public class ClassifierNetworkTest : MonoBehaviour
         {
             for (int x = 0; x < domainTexture.width; x++)
             {
-                brain.SensoryInputs[0] = ((float)x / (float)domainTexture.width) * domainSize - domainSize / 2f - domainOffset.x;
-                brain.SensoryInputs[1] = ((float)y / (float)domainTexture.height) * domainSize - domainSize / 2f - domainOffset.y;
+                brain.InLayer.Outputs[0,0,0] = ((float)x / (float)domainTexture.width) * domainSize - domainSize / 2f - domainOffset.x;
+                brain.InLayer.Outputs[1,0,0] = ((float)y / (float)domainTexture.height) * domainSize - domainSize / 2f - domainOffset.y;
                 brain.Think();
                 Color c;
                 if (quantizePredictionsToggle.isOn)
                 {
-                    c = brain.Results[0] > 0.5f ? Color.yellow : Color.cyan;
+                    c = brain.OutLayer.WinnerIndex == 0 ? Color.yellow : Color.cyan;
                 }
                 else
                 {
-                    c = Color.Lerp(Color.cyan, Color.yellow, brain.Results[0]);
+                    c = Color.Lerp(Color.cyan, Color.yellow, brain.OutLayer.Outputs[0, 0, 0]);
                 }
                 domainTexture.SetPixel(x, y, c);
             }

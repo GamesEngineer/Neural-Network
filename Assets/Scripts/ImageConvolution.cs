@@ -121,10 +121,10 @@ public class ImageConvolution : MonoBehaviour
             { -2f,  0f,  2f },
             { -1f,  0f,  1f },
         },
-        { // Custom - Outline2
-            { 1f, 1f, 1f },
-            { 1f, -8f, 1f },
-            { 1f, 1f, 1f },
+        { // Outline2 (Laplacian)
+            { 1f,   2f, 1f },
+            { 2f, -12f, 2f },
+            { 1f,   2f, 1f },
         },
     };
 
