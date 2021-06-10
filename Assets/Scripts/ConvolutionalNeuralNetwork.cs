@@ -617,16 +617,6 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         public int OneHotIndex { get; private set; }
         public int WinnerIndex { get; private set; }
 
-        public OutputLayer(ILayer inLayer, Neuron.ActivationType activation)
-        {
-            this.inLayer = inLayer;
-            this.Activation = activation;
-            inLayer.OutLayer = this;
-            this.errors = new float[Depth, Width, Height];
-            this.targets = new float[Depth, Width, Height];
-            this.outputs = new float[Depth, Width, Height];
-        }
-
         public float CalculateLoss()
         {
             float loss = 0f;
