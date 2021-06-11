@@ -598,6 +598,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
             outputs = new float[Depth, Width, Height];
             ChannelMin = new float[Depth];
             ChannelMax = new float[Depth];
+            shiftedExp = new double[Depth];
         }
         
         public void Activate()
@@ -620,7 +621,6 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                         OutputsWinnerIndex = z;
                     }
                 }
-                double[] shiftedExp = new double[Depth];
                 double expSum = 0;
                 for (int z = 0; z < Depth; z++)
                 {
@@ -631,12 +631,13 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
                 Assert.IsTrue(expSum != 0.0);
                 Assert.IsFalse(double.IsNaN(expSum));
                 Assert.IsFalse(double.IsInfinity(expSum));
+                double invExpSum = 1.0 / expSum;
                 for (int z = 0; z < Depth; z++)
                 {
-                    float o = (float)(shiftedExp[z] / expSum);
+                    float o = (float)(shiftedExp[z] * invExpSum);
                     outputs[z, 0, 0] = o;
-                    if (o < ChannelMin[z]) ChannelMin[z] = o;
-                    if (o > ChannelMax[z]) ChannelMax[z] = o;
+                    /*if (o < ChannelMin[z])*/ ChannelMin[z] = o - 0.5f;
+                    /*if (o > ChannelMax[z])*/ ChannelMax[z] = o + 0.5f;
                 }
             }
             else
@@ -732,6 +733,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         private readonly float[,,] outputs;
         private readonly float[,,] feedback;
         private readonly float[,,] targets;
+        private readonly double[] shiftedExp;
     }
 
     public InputLayer InLayer { get; private set; }
