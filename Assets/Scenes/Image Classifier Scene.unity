@@ -177,7 +177,7 @@ MonoBehaviour:
   progressBar: {fileID: 1914235745}
   stepManually: 0
   numEpochs: 64
-  maxTrainingItems: 1000
+  maxTrainingItems: 100
 --- !u!114 &190020314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -191,23 +191,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   configuration:
-  - channelCount: 12
+  - channelCount: 10
     activationType: 3
     kernelSize: 3
     stride: 1
-  - channelCount: 12
+  - channelCount: 10
     activationType: 5
     kernelSize: 2
     stride: 2
-  - channelCount: 24
+  - channelCount: 20
     activationType: 3
     kernelSize: 3
     stride: 1
-  - channelCount: 24
+  - channelCount: 20
     activationType: 5
     kernelSize: 2
     stride: 2
-  - channelCount: 200
+  - channelCount: 100
     activationType: 3
     kernelSize: 0
     stride: 0

@@ -1684,11 +1684,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configuration:
   - channelCount: 16
-    activationType: 3
+    activationType: 1
     kernelSize: 0
     stride: 0
   - channelCount: 16
-    activationType: 3
+    activationType: 1
     kernelSize: 0
     stride: 0
   - channelCount: 2

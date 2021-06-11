@@ -191,12 +191,15 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         layerName.text = $"[{debugLayerIndex}] {layer.GetType().Name}\nShape: {layer.Width}x{layer.Height}x{layer.Depth}\nChannel: {debugChannelIndex}\nActivation: {layer.Activation}";
 
         layerTexture.SetPixels32(new Color32[layerTexture.width * layerTexture.height]);
+        float min = layer.ChannelMin[debugChannelIndex];
+        float layerNormalizer = 1f / (layer.ChannelMax[debugChannelIndex] - min);
         for (int y = 0; y < layer.Height; y++)
         {
             for (int x = 0; x < layer.Width; x++)
             {
-                float r = layer.Outputs[debugChannelIndex, y, x];
-                Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, 2f * r * r, -r, 1f);
+                float r = layer.Outputs[debugChannelIndex, y, x] - min;
+                r *= layerNormalizer;
+                Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, r, r, 1f);
                 layerTexture.SetPixel(x, layer.Height - 1 - y, c);
             }
         }
@@ -368,6 +371,12 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 }
                 else
                 {
+                    if (Input.GetKeyDown(KeyCode.Space))
+                    {
+                        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.Space));
+                        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
+                        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.Space));
+                    }
                     yield return null;
                 }
             }

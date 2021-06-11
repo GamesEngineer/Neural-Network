@@ -38,8 +38,15 @@ public class InspectChannel : MonoBehaviour, IPointerDownHandler
             valueText.enabled = false;
         }
 
-        float value = icnTest.GetDebugLayerOutput(x, y);
+        int ty = texture.height - 1 - y;
+        float value = icnTest.GetDebugLayerOutput(x, ty);
         valueText.text = value.ToString();
         valueText.enabled = true;
+
+        var c = texture.GetPixel(x, y);
+        c.g = 1f - c.g;
+        c.b = 1f - c.b;
+        texture.SetPixel(x, y, c);
+        texture.Apply();
     }
 }
