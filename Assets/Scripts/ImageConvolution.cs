@@ -64,7 +64,8 @@ public class ImageConvolution : MonoBehaviour
                 {
                     for (int a = -1; a <= 1; a++)
                     {
-                        Color src = sourceTexture.GetPixel(x + a, y - b); // NOTE: -b, because texture coords start at BOTTOM left
+                        // NOTE: -b, because texture coords start at BOTTOM left
+                        Color src = sourceTexture.GetPixel(x + a, y - b);
                         dst += src * kernel[b+1, a+1];
                     }
                 }

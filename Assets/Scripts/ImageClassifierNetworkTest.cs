@@ -1,4 +1,4 @@
-//#define DEBUG_CONV_LAYER
+#define DEBUG_CONV_LAYER
 //#define DEBUG_POOL_LAYER
 using System;
 using System.IO;
@@ -54,7 +54,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             {
                 new ConvolutionalNeuralNetwork.LayerInfo
                 {
-                    channelCount = 1,
+                    channelCount = 100,
                     activationType = Neuron.ActivationType.ReLU,
                     kernelSize = 3,
                     stride = 1,
@@ -209,14 +209,14 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         if (convLayer != null)
         {
             kernelTexture.SetPixels32(new Color32[kernelTexture.width * kernelTexture.height]);
-            float normalizer = 1f / (convLayer.config.kernelSize * convLayer.config.kernelSize);
+            //float normalizer = 1f / (convLayer.config.kernelSize * convLayer.config.kernelSize);
             for (int n = 0; n < convLayer.config.kernelSize; n++)
             {
                 for (int m = 0; m < convLayer.config.kernelSize; m++)
                 {
-                    float r = convLayer.GetKernelValue(0, debugChannelIndex, m, n);
+                    float r = convLayer.GetKernelValue(debugChannelIndex, m, n);
                     float b = convLayer.GetBias(debugChannelIndex);
-                    r *= normalizer; // scale down to help show range of kernel values
+                    //r *= normalizer; // scale down to help show range of kernel values
                     Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, b * b, -r, 1f);
                     kernelTexture.SetPixel(m, convLayer.config.kernelSize - 1 - n, c);
                 }
@@ -418,38 +418,41 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         Assert.IsTrue(brain.OutLayer.Width == brain.InLayer.Width);
         float[,] kernel = new float[3, 3]
         {
-#if true
+#if false
             // Pseudo-emboss (using an asymetrical filter helps to find bugs)
-            { -3.00f, -2.20f, -1.00f },
-            { -2.80f, +2.00f, +0.50f },
-            { +0.00f, +2.50f, +4.00f },
+            { -0.750f, -0.550f, -0.250f },
+            { -0.700f, +0.500f, +0.125f },
+            { +0.000f, +0.625f, +1.000f },
 #else
-            { 9.0f, 0.0f, 0.0f },
+            { 1.0f, 0.0f, 0.0f },
             { 0.0f, 0.0f, 0.0f },
             { 0.0f, 0.0f, 0.0f },
 #endif
         };
         Func<float, float> activate = Neuron.ActivationFunctions[(int)brain.InLayer.OutLayer.Activation];
-        for (int y = 0; y < brain.OutLayer.Height; y++)
+        for (int z = 0; z < brain.OutLayer.Depth; z++)
         {
-            for (int x = 0; x < brain.OutLayer.Width; x++)
+            for (int y = 0; y < brain.OutLayer.Height; y++)
             {
-                float dst = 0f;
-                for (int b = -1; b <= 1; b++)
+                for (int x = 0; x < brain.OutLayer.Width; x++)
                 {
-                    int n = y + b;
-                    if (n < 0 || n >= brain.InLayer.Height) continue;
-
-                    for (int a = -1; a <= 1; a++)
+                    float dst = 0f;
+                    for (int b = -1; b <= 1; b++)
                     {
-                        int m = x + a;
-                        if (m < 0 || m >= brain.InLayer.Width) continue;
+                        int n = y + b;
+                        if (n < 0 || n >= brain.InLayer.Height) continue;
 
-                        float src = brain.InLayer.signals[0, n, m];
-                        dst += src * kernel[b + 1, a + 1];
+                        for (int a = -1; a <= 1; a++)
+                        {
+                            int m = x + a;
+                            if (m < 0 || m >= brain.InLayer.Width) continue;
+
+                            float src = brain.InLayer.signals[0, n, m];
+                            dst += src * kernel[b + 1, a + 1];
+                        }
                     }
+                    brain.OutLayer.Targets[z, y, x] = activate(dst);
                 }
-                brain.OutLayer.Targets[0, y, x] = activate(dst);
             }
         }
 #elif DEBUG_POOL_LAYER
