@@ -32,7 +32,7 @@ public class OutputLayer : INeuralLayer
         shiftedExp = new double[Depth];
     }
 
-    public void Activate()
+    public void Activate(bool withDropout)
     {
         Tensor.Fill(ChannelMin, float.PositiveInfinity);
         Tensor.Fill(ChannelMax, float.NegativeInfinity);

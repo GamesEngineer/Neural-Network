@@ -9,6 +9,7 @@ public struct NeuralLayerConfig
     public Neuron.ActivationType activationType;
     [Range(0, 7)] public int kernelSize;
     [Range(0, 7)] public int stride;
+    [Range(0f, 1f)] public float dropout;
 
     public int CalculateOutputSize(int numInputsAlongDimension)
     {

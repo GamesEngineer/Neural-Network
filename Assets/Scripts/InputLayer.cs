@@ -23,7 +23,7 @@ public class InputLayer : INeuralLayer
         ChannelMax = new float[depth];
     }
 
-    public void Activate()
+    public void Activate(bool withDropout = false)
     {
         Tensor.Fill(ChannelMin, float.PositiveInfinity);
         Tensor.Fill(ChannelMax, float.NegativeInfinity);
@@ -41,7 +41,7 @@ public class InputLayer : INeuralLayer
             }
         }
 
-        OutLayer.Activate();
+        OutLayer.Activate(withDropout);
     }
 
     public void BackPropagate() { /*stop*/ }

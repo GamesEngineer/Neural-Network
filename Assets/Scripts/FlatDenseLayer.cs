@@ -57,32 +57,41 @@ public class FlatDenseLayer : INeuralLayer
         }
     }
 
-    public void Activate()
+    public void Activate(bool withDropout)
     {
         Tensor.Fill(ChannelMin, float.PositiveInfinity);
         Tensor.Fill(ChannelMax, float.NegativeInfinity);
 
         for (int outZ = 0; outZ < depth; outZ++)
         {
-            float weightedSum = biases[outZ];
-            for (int inZ = 0; inZ < input.Depth; inZ++)
+            float activation;
+            if (withDropout && UnityEngine.Random.value < config.dropout)
             {
-                for (int inY = 0; inY < input.Height; inY++)
+                signals[outZ] = float.NegativeInfinity;
+                activation = 0f;
+            }
+            else
+            {
+                float weightedSum = biases[outZ];
+                for (int inZ = 0; inZ < input.Depth; inZ++)
                 {
-                    for (int inX = 0; inX < input.Width; inX++)
+                    for (int inY = 0; inY < input.Height; inY++)
                     {
-                        weightedSum += InLayer.Outputs[inZ, inY, inX] * weights[outZ, inZ, inY, inX];
+                        for (int inX = 0; inX < input.Width; inX++)
+                        {
+                            weightedSum += InLayer.Outputs[inZ, inY, inX] * weights[outZ, inZ, inY, inX];
+                        }
                     }
                 }
+                signals[outZ] = weightedSum;
+                activation = activationFunc(weightedSum);
             }
-            signals[outZ] = weightedSum;
-            float o = activationFunc(weightedSum);
-            activations[outZ, 0, 0] = o;
-            if (o < ChannelMin[outZ]) ChannelMin[outZ] = o;
-            if (o > ChannelMax[outZ]) ChannelMax[outZ] = o;
+            activations[outZ, 0, 0] = activation;
+            if (activation < ChannelMin[outZ]) ChannelMin[outZ] = activation;
+            if (activation > ChannelMax[outZ]) ChannelMax[outZ] = activation;
         }
 
-        OutLayer.Activate();
+        OutLayer.Activate(withDropout);
     }
 
     public void BackPropagate()

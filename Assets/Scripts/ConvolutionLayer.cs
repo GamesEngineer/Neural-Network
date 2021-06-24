@@ -58,7 +58,7 @@ public class ConvolutionLayer : INeuralLayer
         }
     }
 
-    public void Activate()
+    public void Activate(bool withDropout)
     {
         Tensor.Fill(ChannelMin, float.PositiveInfinity);
         Tensor.Fill(ChannelMax, float.NegativeInfinity);
@@ -69,18 +69,27 @@ public class ConvolutionLayer : INeuralLayer
             {
                 for (int outX = 0; outX < width; outX++)
                 {
-                    float weightedSum = Tensor.CrossCorrelation(outX, outY, outZ, kernels, input.Outputs, config.stride);
-                    float neuronSignal = weightedSum + biases[outZ];
-                    float o = activationFunc(neuronSignal);
-                    signals[outZ, outY, outX] = neuronSignal;
-                    activations[outZ, outY, outX] = o;
-                    if (o < ChannelMin[outZ]) ChannelMin[outZ] = o;
-                    if (o > ChannelMax[outZ]) ChannelMax[outZ] = o;
+                    float activation;
+                    if (withDropout && UnityEngine.Random.value < config.dropout)
+                    {
+                        signals[outZ, outY, outX] = float.NegativeInfinity;
+                        activation = 0f;
+                    }
+                    else
+                    {
+                        float weightedSum = biases[outZ];
+                        weightedSum += Tensor.CrossCorrelation(outX, outY, outZ, kernels, input.Outputs, config.stride);
+                        signals[outZ, outY, outX] = weightedSum;
+                        activation = activationFunc(weightedSum);
+                    }
+                    activations[outZ, outY, outX] = activation;
+                    if (activation < ChannelMin[outZ]) ChannelMin[outZ] = activation;
+                    if (activation > ChannelMax[outZ]) ChannelMax[outZ] = activation;
                 }
             }
         }
 
-        OutLayer.Activate();
+        OutLayer.Activate(withDropout);
     }
 
     public void BackPropagate()

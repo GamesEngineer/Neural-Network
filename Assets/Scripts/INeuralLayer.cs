@@ -10,7 +10,7 @@ public interface INeuralLayer
     float[/*depth*/,/*height*/,/*width*/] Outputs { get; }
     float[/*depth*/,/*height*/,/*width*/] Feedback { get; }
     Neuron.ActivationType Activation { get; }
-    void Activate();
+    void Activate(bool withDropout);
     void BackPropagate();
     void UpdateWeightsAndBiases(float learningRate);
     float CalculateWeightedFeedback(int inZ, int inY, int inX);

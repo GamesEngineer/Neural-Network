@@ -177,7 +177,7 @@ MonoBehaviour:
   progressBar: {fileID: 1914235745}
   stepManually: 0
   numEpochs: 64
-  maxTrainingItems: 100
+  maxTrainingItems: 500
 --- !u!114 &190020314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,26 +195,32 @@ MonoBehaviour:
     activationType: 5
     kernelSize: 3
     stride: 1
+    dropout: 0
   - channelCount: 16
     activationType: 6
     kernelSize: 2
     stride: 2
+    dropout: 0
   - channelCount: 32
     activationType: 5
     kernelSize: 3
     stride: 1
+    dropout: 0.2
   - channelCount: 32
     activationType: 6
     kernelSize: 2
     stride: 2
+    dropout: 0
   - channelCount: 748
     activationType: 5
     kernelSize: 0
     stride: 0
+    dropout: 0.5
   - channelCount: 10
     activationType: 5
     kernelSize: 0
     stride: 0
+    dropout: 0
   learningRate: 0.001
 --- !u!1 &656845873
 GameObject:

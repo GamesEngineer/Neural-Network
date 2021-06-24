@@ -67,7 +67,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     public void Learn(float learningRateMultiplier = 1f)
     {
         if (InLayer == null || OutLayer == null) return;
-        InLayer.Activate();
+        InLayer.Activate(withDropout: true);
         Loss = OutLayer.CalculateLoss();
         OutLayer.BackPropagate();
         InLayer.UpdateWeightsAndBiases(learningRate * learningRateMultiplier);

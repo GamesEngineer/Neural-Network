@@ -34,7 +34,7 @@ public class MaxPoolLayer : INeuralLayer
         ChannelMax = new float[depth];
     }
 
-    public void Activate()
+    public void Activate(bool withDropout)
     {
         Tensor.Fill(ChannelMin, float.PositiveInfinity);
         Tensor.Fill(ChannelMax, float.NegativeInfinity);
@@ -53,7 +53,7 @@ public class MaxPoolLayer : INeuralLayer
             }
         }
 
-        OutLayer.Activate();
+        OutLayer.Activate(withDropout);
     }
 
     public void BackPropagate()
