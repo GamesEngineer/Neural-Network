@@ -10,13 +10,14 @@ public static class Neuron
         Sigmoid,
         ReLU,
         ELU,
+        LeReLU,
 
         MaxPool,
         SoftMax,
     }
 
-    public static Func<float, float>[] ActivationFunctions = { Identity, Tanh, Sigmoid, ReLU, ELU, null, null };
-    public static Func<float, float>[] ActivationDerivatives = { Identity, dTanh, dSigmoid, dReLU, dELU, null, null };
+    public static Func<float, float>[] ActivationFunctions = { Identity, Tanh, Sigmoid, ReLU, ELU, LeReLU, null, null };
+    public static Func<float, float>[] ActivationDerivatives = { Identity, dTanh, dSigmoid, dReLU, dELU, dLeReLU, null, null };
 
     private static float Identity(float x) => x;
 
@@ -67,5 +68,15 @@ public static class Neuron
     private static float dELU(float x)
     {
         return x >= 0f ? 1f : 0.1f * Mathf.Exp(x);
+    }
+
+    private static float LeReLU(float x)
+    {
+        return x > 0f ? x : 0.1f * x;
+    }
+
+    private static float dLeReLU(float x)
+    {
+        return x > 0f ? 1f : 0.1f;
     }
 }

@@ -191,32 +191,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   configuration:
-  - channelCount: 10
-    activationType: 3
+  - channelCount: 16
+    activationType: 5
     kernelSize: 3
     stride: 1
-  - channelCount: 10
-    activationType: 5
+  - channelCount: 16
+    activationType: 6
     kernelSize: 2
     stride: 2
-  - channelCount: 20
-    activationType: 3
+  - channelCount: 32
+    activationType: 5
     kernelSize: 3
     stride: 1
-  - channelCount: 20
-    activationType: 5
+  - channelCount: 32
+    activationType: 6
     kernelSize: 2
     stride: 2
-  - channelCount: 100
-    activationType: 3
+  - channelCount: 748
+    activationType: 5
     kernelSize: 0
     stride: 0
   - channelCount: 10
-    activationType: 3
+    activationType: 5
     kernelSize: 0
     stride: 0
-  learningRate: 0.01
-  batchSize: 1
+  learningRate: 0.001
 --- !u!1 &656845873
 GameObject:
   m_ObjectHideFlags: 0
