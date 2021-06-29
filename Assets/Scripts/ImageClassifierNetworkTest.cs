@@ -207,10 +207,10 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             kernelTexture.SetPixels32(new Color32[kernelTexture.width * kernelTexture.height]);
             for (int ty = 0; ty < kernelTexture.height; ty++)
             {
-                int n = ty * convLayer.config.kernelSize / kernelTexture.height;
+                int n = ty * convLayer.KernelSize / kernelTexture.height;
                 for (int tx = 0; tx < kernelTexture.width; tx++)
                 {
-                    int m = tx * convLayer.config.kernelSize / kernelTexture.width;
+                    int m = tx * convLayer.KernelSize / kernelTexture.width;
                     float r = convLayer.GetKernelValue(debugChannelIndex, m, n);
                     float b = convLayer.GetBias(debugChannelIndex) * 0.1f;
                     Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, b * b, -r, 1f);

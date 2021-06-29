@@ -12,12 +12,12 @@ public class OutputLayer : INeuralLayer
     public int Depth => inLayer.Depth;
     public float[,,] Outputs => outputs;
     public float[,,] Feedback => feedback;
-    public float[,,] Targets => targets;
     public Neuron.ActivationType Activation { get; }
-    public int TargetsOneHotIndex { get; private set; } = -1; // Only valid when using SoftMax activation
-    public int OutputsWinnerIndex { get; private set; } = -1; // Only valid when using SoftMax activation
     public float[] ChannelMin { get; private set; }
     public float[] ChannelMax { get; private set; }
+    public float[,,] Targets => targets;
+    public int TargetsOneHotIndex { get; private set; } = -1; // Only valid when using SoftMax activation
+    public int OutputsWinnerIndex { get; private set; } = -1; // Only valid when using SoftMax activation
 
     public OutputLayer(INeuralLayer inLayer, Neuron.ActivationType activation)
     {
@@ -101,6 +101,8 @@ public class OutputLayer : INeuralLayer
         /*stop*/
     }
 
+    public float CalculateWeightedFeedback(int inZ, int inY, int inX) => feedback[inZ, inY, inX];
+    
     public float CalculateLoss()
     {
         float loss = 0f;
@@ -144,8 +146,6 @@ public class OutputLayer : INeuralLayer
         loss /= (Width * Height * Depth);
         return (float)loss;
     }
-
-    public float CalculateWeightedFeedback(int inZ, int inY, int inX) => feedback[inZ, inY, inX];
 
     private readonly INeuralLayer inLayer;
     private readonly float[,,] outputs;

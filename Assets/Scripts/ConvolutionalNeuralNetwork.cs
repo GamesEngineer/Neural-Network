@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 using UnityEngine.Assertions;
+using System.IO;
 
 public class ConvolutionalNeuralNetwork : MonoBehaviour
 {
@@ -73,5 +75,36 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         InLayer.UpdateWeightsAndBiases(learningRate * learningRateMultiplier);
     }
 
+#if false // Work In Progress
+    const string checkpointFilename = "cnn-checkpoint.txt";
 
+    [MenuItem("Tools/Save CNN Checkpoint")]
+    public static void SaveCheckpoint()
+    {
+        var cnn = FindObjectOfType<ConvolutionalNeuralNetwork>();
+        if (cnn == null)
+        {
+            Debug.LogWarning($"Save Failed! Cannot find a {nameof(ConvolutionalNeuralNetwork)} in the scene");
+            return;
+        }
+
+        string fullPath = Application.persistentDataPath + checkpointFilename;
+        print($"Saving checkpoint to {fullPath}...");
+        using (StreamWriter writer = new StreamWriter(fullPath))
+        {
+            string json = JsonUtility.ToJson(cnn, prettyPrint: true);
+            writer.WriteLine(json);
+        }
+        print("Checkpoint saved");
+    }
+
+    [MenuItem("Tools/Load CNN Checkpoint")]
+    public static void LoadCheckpoint()
+    {
+        print($"Loading checkpoint from {checkpointFilename}...");
+        // Deserialize the network configuration
+        // Deserialize the parameter data of each layer
+        print("Checkpoint loaded");
+    }
+#endif
 }

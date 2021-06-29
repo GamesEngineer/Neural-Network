@@ -78,6 +78,19 @@ public class MaxPoolLayer : INeuralLayer
         OutLayer.UpdateWeightsAndBiases(learningRate);
     }
 
+    public float CalculateWeightedFeedback(int inZ, int inY, int inX)
+    {
+        // Only propagate feedback to the maximum input in the pooling window.
+        // Other inputs in the pooling window will receive no feedback because
+        // they did not contribute to the error.
+        int outZ = inZ;
+        int outY = inY / config.stride;
+        int outX = inX / config.stride;
+        if (outX >= width || outY >= height) return 0f;
+        Vector2Int maxIn = maxInputCoords[outZ, outY, outX];
+        return maxIn.x == inX && maxIn.y == inY ? feedback[outZ, outY, outX] : 0f;
+    }
+
     private float GetMaxInputInKernelWindow(int outZ, int outY, int outX)
     {
         maxInputCoords[outZ, outY, outX] = Vector2Int.zero;
@@ -103,19 +116,6 @@ public class MaxPoolLayer : INeuralLayer
         }
 
         return maxInput;
-    }
-
-    public float CalculateWeightedFeedback(int inZ, int inY, int inX)
-    {
-        // Only propagate feedback to the maximum input in the pooling window.
-        // Other inputs in the pooling window will receive no feedback because
-        // they did not contribute to the error.
-        int outZ = inZ;
-        int outY = inY / config.stride;
-        int outX = inX / config.stride;
-        if (outX >= width || outY >= height) return 0f;
-        Vector2Int maxIn = maxInputCoords[outZ, outY, outX];
-        return maxIn.x == inX && maxIn.y == inY ? feedback[outZ, outY, outX] : 0f;
     }
 
     private readonly NeuralLayerConfig config;

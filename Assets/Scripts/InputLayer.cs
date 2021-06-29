@@ -45,7 +45,10 @@ public class InputLayer : INeuralLayer
     }
 
     public void BackPropagate() { /*stop*/ }
+
     public void UpdateWeightsAndBiases(float learningRate) => OutLayer.UpdateWeightsAndBiases(learningRate);
+
     public float CalculateWeightedFeedback(int inZ, int inY, int inX) => throw new NotImplementedException();
+
     public readonly float[,,] signals;
 }

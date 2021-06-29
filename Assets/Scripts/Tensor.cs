@@ -1,5 +1,4 @@
 ﻿// Copyright 2021 Game-U Enterprises LLC
-using System;
 using UnityEngine;
 using UnityEngine.Assertions;
 

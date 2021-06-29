@@ -5,7 +5,6 @@ using UnityEngine.Assertions;
 
 public class ConvolutionLayer : INeuralLayer
 {
-    public readonly NeuralLayerConfig config;
     public INeuralLayer InLayer => input;
     public INeuralLayer OutLayer { get; set; }
     public int Width => width;
@@ -16,6 +15,7 @@ public class ConvolutionLayer : INeuralLayer
     public Neuron.ActivationType Activation => config.activationType;
     public float[] ChannelMin { get; private set; }
     public float[] ChannelMax { get; private set; }
+    public int KernelSize => config.kernelSize;
 
     public ConvolutionLayer(INeuralLayer input, NeuralLayerConfig config)
     {
@@ -157,6 +157,7 @@ public class ConvolutionLayer : INeuralLayer
 
     public float GetBias(int channelIndex) => biases[channelIndex];
 
+    private readonly NeuralLayerConfig config;
     private readonly INeuralLayer input;
     private readonly int width;
     private readonly int height;
