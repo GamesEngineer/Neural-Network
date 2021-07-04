@@ -39,6 +39,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     private readonly List<byte> trainingLabels = new List<byte>();
     private int debugLayerIndex = 1;
     private int debugChannelIndex;
+    private int debugInChannelIndex;
 
     // MNIST database of handwritten digits
     const string TRAINING_IMAGES_FILENAME = @"Assets/train-images-idx3-ubyte/train-images.idx3-ubyte";
@@ -177,7 +178,18 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftArrow)) { debugChannelIndex += layer.Depth - 1; }
         debugChannelIndex %= layer.Depth;
 
-        layerName.text = $"[{debugLayerIndex}] {layer.GetType().Name}\nShape: {layer.Width}x{layer.Height}x{layer.Depth}\nChannel: {debugChannelIndex}\nActivation: {layer.Activation}";
+        if (layer.InLayer != null)
+        {
+            if (Input.GetKeyDown(KeyCode.PageUp)) { debugInChannelIndex += 1; }
+            if (Input.GetKeyDown(KeyCode.PageDown)) { debugInChannelIndex += layer.InLayer.Depth - 1; }
+            debugInChannelIndex %= layer.InLayer.Depth;
+        }
+        else
+        {
+            debugInChannelIndex = 0;
+        }
+
+        layerName.text = $"[{debugLayerIndex}] {layer.GetType().Name}\nShape: {layer.Width}x{layer.Height}x{layer.Depth}\nChannel: {debugInChannelIndex}->{debugChannelIndex}\nActivation: {layer.Activation}";
 
         layerTexture.SetPixels32(new Color32[layerTexture.width * layerTexture.height]);
         float min = layer.ChannelMin[debugChannelIndex];
@@ -201,6 +213,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
         }
         layerTexture.Apply();
 
+        layerNormalizer = layer.InLayer != null ? layer.InLayer.Depth : 1f;
         var convLayer = layer as ConvolutionLayer;
         if (convLayer != null)
         {
@@ -211,18 +224,34 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 for (int tx = 0; tx < kernelTexture.width; tx++)
                 {
                     int m = tx * convLayer.config.kernelSize / kernelTexture.width;
-                    float r = convLayer.GetKernelValue(debugChannelIndex, m, n);
+                    float r = convLayer.GetKernelValue(debugChannelIndex, m, n, debugInChannelIndex);
+                    r *= layerNormalizer;
                     float b = convLayer.GetBias(debugChannelIndex) * 0.1f;
                     Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, b * b, -r, 1f);
                     kernelTexture.SetPixel(tx, kernelTexture.height - 1 - ty, c);
                 }
             }
             kernelTexture.Apply();
-            kernelImage.gameObject.SetActive(true);
+            //kernelImage.gameObject.SetActive(true);
         }
         else
         {
-            kernelImage.gameObject.SetActive(false);
+            kernelTexture.SetPixels32(new Color32[kernelTexture.width * kernelTexture.height]);
+            for (int ty = 0; ty < kernelTexture.height; ty++)
+            {
+                int y = ty * layer.Height / kernelTexture.height;
+                for (int tx = 0; tx < kernelTexture.width; tx++)
+                {
+                    int x = tx * layer.Width / kernelTexture.width;
+                    float r = layer.GetWeight(debugChannelIndex, debugInChannelIndex, y, x);
+                    r *= layerNormalizer;
+                    float b = layer.GetBias(debugChannelIndex) * 0.1f;
+                    Color c = float.IsNaN(r) || float.IsInfinity(r) ? Color.magenta : new Color(r, b * b, -r, 1f);
+                    kernelTexture.SetPixel(tx, kernelTexture.height - 1 - ty, c);
+                }
+            }
+            kernelTexture.Apply();
+            //kernelImage.gameObject.SetActive(false);
         }
 
         layerImage.enabled = true;

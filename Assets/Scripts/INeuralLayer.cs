@@ -16,4 +16,6 @@ public interface INeuralLayer
     float CalculateWeightedFeedback(int inZ, int inY, int inX);
     float[] ChannelMin { get; }
     float[] ChannelMax { get; }
+    float GetWeight(int channel, int inZ, int inY, int inX);
+    float GetBias(int channel);
 }

@@ -146,6 +146,9 @@ public class FlatDenseLayer : INeuralLayer
         return e;
     }
 
+    public float GetWeight(int channel, int inZ, int inY, int inX) => weights[channel, inZ, inY, inX];
+    public float GetBias(int channel) => biases[channel];
+
     private readonly NeuralLayerConfig config;
     private readonly INeuralLayer input;
     private readonly int depth;

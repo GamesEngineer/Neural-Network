@@ -176,8 +176,8 @@ MonoBehaviour:
   resultText: {fileID: 1854818257}
   progressBar: {fileID: 1914235745}
   stepManually: 0
-  numEpochs: 64
-  maxTrainingItems: 500
+  numEpochs: 32
+  maxTrainingItems: 1000
 --- !u!114 &190020314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -191,6 +191,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   configuration:
+  - channelCount: 8
+    activationType: 5
+    kernelSize: 3
+    stride: 1
+    dropout: 0
+  - channelCount: 8
+    activationType: 6
+    kernelSize: 2
+    stride: 2
+    dropout: 0
   - channelCount: 16
     activationType: 5
     kernelSize: 3
@@ -201,17 +211,7 @@ MonoBehaviour:
     kernelSize: 2
     stride: 2
     dropout: 0
-  - channelCount: 32
-    activationType: 5
-    kernelSize: 3
-    stride: 1
-    dropout: 0
-  - channelCount: 32
-    activationType: 6
-    kernelSize: 2
-    stride: 2
-    dropout: 0
-  - channelCount: 748
+  - channelCount: 512
     activationType: 5
     kernelSize: 0
     stride: 0
