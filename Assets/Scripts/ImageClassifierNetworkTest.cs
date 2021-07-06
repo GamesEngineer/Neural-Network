@@ -223,7 +223,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
                 int n = ty * convLayer.KernelSize / kernelTexture.height;
                 for (int tx = 0; tx < kernelTexture.width; tx++)
                 {
-                    int m = tx * convLayer.config.kernelSize / kernelTexture.width;
+                    int m = tx * convLayer.KernelSize / kernelTexture.width;
                     float r = convLayer.GetKernelValue(debugChannelIndex, m, n, debugInChannelIndex);
                     r *= layerNormalizer;
                     float b = convLayer.GetBias(debugChannelIndex) * 0.1f;
