@@ -50,5 +50,7 @@ public class InputLayer : INeuralLayer
 
     public float CalculateWeightedFeedback(int inZ, int inY, int inX) => throw new NotImplementedException();
 
+    public float GetWeight(int channel, int inZ, int inY, int inX) => 0f;
+    public float GetBias(int channel) => 0f;
     public readonly float[,,] signals;
 }

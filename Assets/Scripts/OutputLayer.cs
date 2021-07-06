@@ -147,6 +147,9 @@ public class OutputLayer : INeuralLayer
         return (float)loss;
     }
 
+    public float GetWeight(int channel, int inZ, int inY, int inX) => 1f;
+    public float GetBias(int channel) => 0f;
+
     private readonly INeuralLayer inLayer;
     private readonly float[,,] outputs;
     private readonly float[,,] feedback;

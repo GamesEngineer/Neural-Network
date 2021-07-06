@@ -118,6 +118,9 @@ public class MaxPoolLayer : INeuralLayer
         return maxInput;
     }
 
+    public float GetWeight(int channel, int inZ, int inY, int inX) => 0f;
+    public float GetBias(int channel) => 0f;
+
     private readonly NeuralLayerConfig config;
     private readonly INeuralLayer input;
     private readonly int depth; // shared by input and output

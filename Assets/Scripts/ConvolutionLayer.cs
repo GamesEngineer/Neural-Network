@@ -28,7 +28,7 @@ public class ConvolutionLayer : INeuralLayer
         width = config.CalculateOutputSize(input.Width);
         signals = new float[depth, height, width];
         activations = new float[depth, height, width];
-        kernels = new float[depth, config.kernelSize, config.kernelSize];
+        kernels = new float[depth, input.Depth, config.kernelSize, config.kernelSize];
         biases = new float[depth];
         feedback = new float[depth, height, width];
         ChannelMin = new float[depth];
@@ -43,15 +43,18 @@ public class ConvolutionLayer : INeuralLayer
         for (int outZ = 0; outZ < depth; outZ++)
         {
             float bias = 0f;
-            for (int kernelY = 0; kernelY < config.kernelSize; kernelY++)
+            for (int kernelZ = 0; kernelZ < input.Depth; kernelZ++)
             {
-                for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
+                for (int kernelY = 0; kernelY < config.kernelSize; kernelY++)
                 {
-                    // Create a pseudo-normal distribution
-                    float r = UnityEngine.Random.Range(-range, +range)
-                            + UnityEngine.Random.Range(-range, +range);
-                    bias += r;
-                    kernels[outZ, kernelY, kernelX] = r;
+                    for (int kernelX = 0; kernelX < config.kernelSize; kernelX++)
+                    {
+                        // Create a pseudo-normal distribution
+                        float r = UnityEngine.Random.Range(-range, +range)
+                                + UnityEngine.Random.Range(-range, +range);
+                        bias += r;
+                        kernels[outZ, kernelZ, kernelY, kernelX] = r;
+                    }
                 }
             }
             biases[outZ] = -bias;
@@ -140,7 +143,7 @@ public class ConvolutionLayer : INeuralLayer
                                 int inX = config.GetInputIndex(outX, kernelX);
                                 if (inX < 0 || inX >= input.Width) continue;
 
-                                kernels[outZ, kernelY, kernelX] += change * input.Outputs[inZ, inY, inX];
+                                kernels[outZ, inZ, kernelY, kernelX] += change * input.Outputs[inZ, inY, inX];
                             }
                         }
                     }
@@ -151,10 +154,10 @@ public class ConvolutionLayer : INeuralLayer
         OutLayer.UpdateWeightsAndBiases(learningRate);
     }
 
-    public float CalculateWeightedFeedback(int z, int y, int x) => Tensor.Convolution(x, y, z, kernels, feedback, config.stride);
+    public float CalculateWeightedFeedback(int inZ, int inY, int inX) => Tensor.Convolution(inX, inY, inZ, kernels, feedback, config.stride);
 
-    public float GetKernelValue(int channelIndex, int kernelX, int kernelY) => kernels[channelIndex, kernelY, kernelX];
-
+    public float GetKernelValue(int channelIndex, int kernelX, int kernelY, int kernelZ) => kernels[channelIndex, kernelZ, kernelY, kernelX];
+    public float GetWeight(int channelIndex, int inZ, int inY, int inX) => throw new NotImplementedException();
     public float GetBias(int channelIndex) => biases[channelIndex];
 
     private readonly NeuralLayerConfig config;
@@ -164,7 +167,7 @@ public class ConvolutionLayer : INeuralLayer
     private readonly int depth;
     private readonly float[,,] signals; // pre-activation value of neurons
     private readonly float[,,] activations; // activated neuron outputs
-    private readonly float[,,] kernels; // convolution kernels [depth, kernelY, kernelX]
+    private readonly float[,,,] kernels; // convolution kernels [channel, inDepth, kernelY, kernelX]
     private readonly float[] biases; // entire channel (Z) uses the same bias value
     private readonly float[,,] feedback; // learning via back propagation
     private readonly Func<float, float> activationFunc; // neuron activation function
