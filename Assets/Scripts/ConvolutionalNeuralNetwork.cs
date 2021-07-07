@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine.Assertions;
 using System.IO;
 
-public class ConvolutionalNeuralNetwork : MonoBehaviour
+public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackReceiver
 {
     #region Network Configuration & Tuning Parameters
 
@@ -75,7 +75,8 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
         InLayer.UpdateWeightsAndBiases(learningRate * learningRateMultiplier);
     }
 
-#if false // Work In Progress
+    #region Work In Progress
+
     const string checkpointFilename = "cnn-checkpoint.txt";
 
     [MenuItem("Tools/Save CNN Checkpoint")]
@@ -101,10 +102,127 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour
     [MenuItem("Tools/Load CNN Checkpoint")]
     public static void LoadCheckpoint()
     {
-        print($"Loading checkpoint from {checkpointFilename}...");
-        // Deserialize the network configuration
-        // Deserialize the parameter data of each layer
+        var cnn = FindObjectOfType<ConvolutionalNeuralNetwork>();
+        if (cnn == null)
+        {
+            Debug.LogWarning($"Save Failed! Cannot find a {nameof(ConvolutionalNeuralNetwork)} in the scene");
+            return;
+        }
+        
+        string fullPath = Application.persistentDataPath + checkpointFilename;
+        print($"Loading checkpoint from {fullPath}...");
+
+        using (StreamReader reader = new StreamReader(fullPath))
+        {
+            string json = reader.ReadToEnd();
+            JsonUtility.FromJsonOverwrite(json, cnn);
+        }
+
         print("Checkpoint loaded");
     }
-#endif
+
+    [Serializable]
+    public class LayerData
+    {
+        public string name;
+        public int channelCount;
+        public int zSize;
+        public int ySize;
+        public int xSize;
+        public float[] weights; // flattened [channel, inZ, inY, inX]
+        public float[] biases; // [channel]
+        public LayerData(string name, int channelCount, int zSize, int ySize, int xSize)
+        {
+            this.name = name;
+            this.channelCount = channelCount;
+            this.zSize = zSize;
+            this.ySize = ySize;
+            this.xSize = xSize;
+            weights = new float[channelCount * zSize * ySize * xSize];
+            biases = new float[channelCount];
+        }
+
+        public int GetWeightIndex(int c, int z, int y, int x)
+        {
+            return x
+                + y * xSize
+                + z * xSize * ySize
+                + c * xSize * ySize * zSize;
+        }
+    }
+
+    [HideInInspector]
+    public List<LayerData> layers = new List<LayerData>();
+
+    public void OnBeforeSerialize()
+    {
+        layers.Clear();
+        if (InLayer == null || OutLayer == null) return;
+
+        for (INeuralLayer layer = InLayer; layer != null; layer = layer.OutLayer)
+        {
+            var convLayer = layer as ConvolutionLayer;
+            if (convLayer != null)
+            {
+                int inDepth = layer.InLayer.Depth;
+                var layerData = new LayerData(layer.GetType().Name, layer.Depth, inDepth, convLayer.KernelSize, convLayer.KernelSize);
+                layers.Add(layerData);
+
+                for (int c = 0; c < layer.Depth; c++)
+                {
+                    layerData.biases[c] = layer.GetBias(c);
+
+                    for (int z = 0; z < inDepth; z++)
+                    {
+                        for (int y = 0; y < convLayer.KernelSize; y++)
+                        {
+                            for (int x = 0; x < convLayer.KernelSize; x++)
+                            {
+                                float w = convLayer.GetKernelValue(c, x, y, z);
+                                int n = layerData.GetWeightIndex(c, z, y, x);
+                                layerData.weights[n] = w;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (layer is FlatDenseLayer)
+            {
+                INeuralLayer i = layer.InLayer;
+                var layerData = new LayerData(layer.GetType().Name, layer.Depth, i.Depth, i.Height, i.Width);
+                layers.Add(layerData);
+
+                for (int c = 0; c < layer.Depth; c++)
+                {
+                    layerData.biases[c] = layer.GetBias(c);
+
+                    for (int z = 0; z < i.Depth; z++)
+                    {
+                        for (int y = 0; y < i.Height; y++)
+                        {
+                            for (int x = 0; x < i.Width; x++)
+                            {
+                                int n = layerData.GetWeightIndex(c, z, y, x);
+                                float w = layer.GetWeight(c, z, y, x);
+                                layerData.weights[n] = w;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var layerData = new LayerData(layer.GetType().Name, layer.Depth, 0, 0, 0);
+                layers.Add(layerData);
+            }
+        }
+    }
+
+    public void OnAfterDeserialize()
+    {
+        // TODO
+    }
+
+    #endregion
+
 }

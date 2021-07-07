@@ -222,6 +222,7 @@ MonoBehaviour:
     stride: 0
     dropout: 0
   learningRate: 0.001
+  layers: []
 --- !u!1 &656845873
 GameObject:
   m_ObjectHideFlags: 0
