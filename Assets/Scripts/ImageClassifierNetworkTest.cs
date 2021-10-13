@@ -106,11 +106,11 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     {
         if (progressBar.enabled) return;
 
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            StartCoroutine(LearnTrainingData());
-            return;
-        }
+        //if (Input.GetKeyDown(KeyCode.Return))
+        //{
+        //    StartCoroutine(LearnTrainingData());
+        //    return;
+        //}
         
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -338,6 +338,8 @@ public class ImageClassifierNetworkTest : MonoBehaviour
 
         resultText.text = "Untrained";
         progressBar.enabled = false;
+
+        yield return LearnTrainingData();
     }
 
     private int ReadIntBigEndian(BinaryReader reader)
