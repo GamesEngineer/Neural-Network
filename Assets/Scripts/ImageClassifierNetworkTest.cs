@@ -35,8 +35,8 @@ public class ImageClassifierNetworkTest : MonoBehaviour
     private Texture2D kernelTexture;
     private float progressBarMaxWidth;
     private bool isPredictionStale;
-    private readonly List<Texture2D> trainingImages = new List<Texture2D>();
-    private readonly List<byte> trainingLabels = new List<byte>();
+    private readonly List<Texture2D> trainingImages = new();
+    private readonly List<byte> trainingLabels = new();
     private int debugLayerIndex = 1;
     private int debugChannelIndex;
     private int debugInChannelIndex;
@@ -133,7 +133,7 @@ public class ImageClassifierNetworkTest : MonoBehaviour
             labelText.text = "";
             resultText.text = "...";
             isPredictionStale = true;
-            return; // Keep the framerate high while drawing by not thinking at the same time
+            //return; // Keep the framerate high while drawing by not thinking at the same time
         }
 
         if (isPredictionStale)

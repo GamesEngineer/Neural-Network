@@ -11,7 +11,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
     #region Network Configuration & Tuning Parameters
 
     [SerializeField]
-    protected List<NeuralLayerConfig> configuration = new List<NeuralLayerConfig>();
+    protected List<NeuralLayerConfig> configuration = new();
 
     [SerializeField, Range(0.0001f, 0.1f)]
     protected float learningRate = 0.001f;
@@ -91,7 +91,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
 
         string fullPath = Application.persistentDataPath + checkpointFilename;
         print($"Saving checkpoint to {fullPath}...");
-        using (StreamWriter writer = new StreamWriter(fullPath))
+        using (StreamWriter writer = new(fullPath))
         {
             string json = JsonUtility.ToJson(cnn, prettyPrint: true);
             writer.WriteLine(json);
@@ -112,7 +112,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
         string fullPath = Application.persistentDataPath + checkpointFilename;
         print($"Loading checkpoint from {fullPath}...");
 
-        using (StreamReader reader = new StreamReader(fullPath))
+        using (StreamReader reader = new(fullPath))
         {
             string json = reader.ReadToEnd();
             JsonUtility.FromJsonOverwrite(json, cnn);
@@ -152,7 +152,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
     }
 
     [HideInInspector]
-    public List<LayerData> layers = new List<LayerData>();
+    public List<LayerData> layers = new();
 
     public void OnBeforeSerialize()
     {
@@ -165,7 +165,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
             if (convLayer != null)
             {
                 int inDepth = layer.InLayer.Depth;
-                var layerData = new LayerData(layer.GetType().Name, layer.Depth, inDepth, convLayer.KernelSize, convLayer.KernelSize);
+                LayerData layerData = new(layer.GetType().Name, layer.Depth, inDepth, convLayer.KernelSize, convLayer.KernelSize);
                 layers.Add(layerData);
 
                 for (int c = 0; c < layer.Depth; c++)
@@ -189,7 +189,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
             else if (layer is FlatDenseLayer)
             {
                 INeuralLayer i = layer.InLayer;
-                var layerData = new LayerData(layer.GetType().Name, layer.Depth, i.Depth, i.Height, i.Width);
+                LayerData layerData = new(layer.GetType().Name, layer.Depth, i.Depth, i.Height, i.Width);
                 layers.Add(layerData);
 
                 for (int c = 0; c < layer.Depth; c++)
@@ -212,7 +212,7 @@ public class ConvolutionalNeuralNetwork : MonoBehaviour, ISerializationCallbackR
             }
             else
             {
-                var layerData = new LayerData(layer.GetType().Name, layer.Depth, 0, 0, 0);
+                LayerData layerData = new(layer.GetType().Name, layer.Depth, 0, 0, 0);
                 layers.Add(layerData);
             }
         }

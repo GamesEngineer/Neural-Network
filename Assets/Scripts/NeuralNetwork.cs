@@ -159,7 +159,7 @@ public class NeuralNetwork : MonoBehaviour
     }
 
     [SerializeField]
-    protected List<LayerInfo> configuration = new List<LayerInfo>();
+    protected List<LayerInfo> configuration = new();
 
     [SerializeField, Range(0.0001f, 0.1f)]
     protected float learningRate = 0.01f;
@@ -226,7 +226,7 @@ public class NeuralNetwork : MonoBehaviour
         float[] inputs = SensoryInputs;
         foreach (var layerInfo in configuration)
         {
-            var layer = new Layer(inputs, layerInfo.neuronCount, layerInfo.activationType);
+            Layer layer = new(inputs, layerInfo.neuronCount, layerInfo.activationType);
             layers.Add(layer);
             // Connect this layer's outputs to the next layer's inputs
             inputs = layer.outputs;
